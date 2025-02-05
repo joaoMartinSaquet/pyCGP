@@ -18,7 +18,7 @@ class SREvaluator(Evaluator):
 
     def evaluate(self, cgp : CGP, it):
 
-        y_cgp = cgp.run(self.x_train)
+        y_cgp = cgp.run(self.x_train)[0]
         loss = self.loss(y_cgp, self.y_train)
 
         # -loss because we want to minimize the error

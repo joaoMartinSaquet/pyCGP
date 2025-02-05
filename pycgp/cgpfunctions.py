@@ -2,10 +2,10 @@ import numpy as np
 import math
 
 def f_sum(args, const_params):
-	return 0.5 * (args[0] + args[1])
+	return (args[0] + args[1])
 
 def f_aminus(args, const_params):
-	return 0.5 * (abs(args[0] - args[1]))
+	return (abs(args[0] - args[1]))
 
 def f_mult(args, const_params):
 	return args[0] * args[1]
@@ -69,3 +69,8 @@ def f_floor(args, const_params):
 def f_ceil(args, const_params):
 	return np.ceil(args[0])
 
+def f_sin(args, const_params):
+	return np.sin(args[0])
+
+def f_cos(args, const_params):
+	return np.cos(args[0])
