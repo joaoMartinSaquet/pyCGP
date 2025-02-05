@@ -1,3 +1,0 @@
-1 1 20 1 0
-4 0 0 0 20 1 1 1 2 2 2 0 4 0 1 0 8 4 3 0 15 2 4 0 4 5 0 0 7 2 7 1 6 7 3 1 16 6 1 1 13 2 3 0 10 11 5 1 10 11 3 1 17 0 4 0 10 10 2 0 5 8 7 0 14 12 13 0 12 5 17 1 10 1 5 1 1 16 19 1 1 
-sum aminus mult exp abs sqrt sqrtxy squared pow one zero const inv gt asin acos atan min max round floor ceil 
