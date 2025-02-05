@@ -1,17 +1,24 @@
 digraph cgp {
 	size = "4,4";
 	y [shape=oval];
-	mult_2 -> y [label="0"];
-	mult_2 [label= "2_mult", shape=none];
-	mult_1 -> mult_2 [label="0"];
-	mult_1 [label= "1_mult", shape=none];
-	x [shape=polygon,sides=6];
-	x -> mult_1 [label="0"];
-	mult_0 -> mult_1 [label="1"];
+	sum_8 -> y [label="0"];
+	sum_8 [label= "8_sum", shape=none];
+	mult_5 -> sum_8 [label="0"];
+	mult_5 [label= "5_mult", shape=none];
+	mult_4 -> mult_5 [label="0"];
+	mult_4 [label= "4_mult", shape=none];
+	mult_0 -> mult_4 [label="0"];
 	mult_0 [label= "0_mult", shape=none];
 	x [shape=polygon,sides=6];
 	x -> mult_0 [label="0"];
 	x [shape=polygon,sides=6];
 	x -> mult_0 [label="1"];
-	mult_1 -> mult_2 [label="1"];
+	x [shape=polygon,sides=6];
+	x -> mult_4 [label="1"];
+	mult_0 -> mult_5 [label="1"];
+	mult_1 -> sum_8 [label="1"];
+	mult_1 [label= "1_mult", shape=none];
+	mult_0 -> mult_1 [label="0"];
+	x [shape=polygon,sides=6];
+	x -> mult_1 [label="1"];
 }

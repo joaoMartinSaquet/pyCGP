@@ -34,7 +34,7 @@ def build_funcLib():
             # CGP.CGPFunc(f_ceil, 'ceil', 1, 0)
             ]
 def fit_me(x):
-    return np.sin(x**3)
+    return np.sin(x**3) + np.cos(x**2)
 
 def evolve(folder_name, col=30, row=1, nb_ind=8, mutation_rate_nodes=0.1, mutation_rate_outputs=0.3,
               n_cpus=1, n_it=1000, genome=None):
