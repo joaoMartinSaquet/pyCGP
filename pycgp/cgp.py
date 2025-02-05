@@ -18,6 +18,24 @@ class CGP:
 			self.function = f
 
 	def __init__(self, genome, num_inputs, num_outputs, num_cols, num_rows, library, recurrency_distance = 1.0, recursive = False, const_min = 0, const_max = 255, input_shape=1, dtype='float'):
+		""" CGP constructor, it construct the CGP object with respect of the num of inputs, outputs, cols and row
+
+
+		Args:
+			genome (array): it s an array of size (max_arity + 1) * (col*row + n_output) 
+			num_inputs (_type_): number of inputs
+			num_outputs (_type_): number of outputs
+			num_cols (_type_): number of cols 
+			num_rows (_type_): number of rows
+			library (_type_): Library ID
+			recurrency_distance (float, optional): _description_. Defaults to 1.0.
+			recursive (bool, optional): _description_. Defaults to False.
+			const_min (int, optional): _description_. Defaults to 0.
+			const_max (int, optional): _description_. Defaults to 255.
+			input_shape (int, optional): _description_. Defaults to 1.
+			dtype (str, optional): _description_. Defaults to 'float'.
+		"""
+	
 		self.genome = genome.copy()
 		self.recursive = recursive
 		self.num_inputs = num_inputs
@@ -50,10 +68,13 @@ class CGP:
 		self.output_genes = np.zeros(self.num_outputs, dtype=int)
 		self.nodes = np.empty(int(len(self.genome-self.num_outputs)/(1+self.max_arity+self.max_const_params)),
 							  dtype=self.CGPNode)
+		
+		# get the outputs genes wich are placed at the end of the genome
 		for i in range(0, self.num_outputs):
 			self.output_genes[i] = self.genome[len(self.genome)-self.num_outputs+i]
 		i = 0
-		#building node list
+
+		#building node list 
 		node_count = 0
 		while i < len(self.genome) - self.num_outputs:
 			f = self.genome[i]
@@ -83,8 +104,13 @@ class CGP:
 		self.nodes_used = np.array(self.nodes_used)
         
 	def load_input_data(self, input_data):
-		for p in range(len(input_data)):
-			self.node_output[p] = input_data[p]
+		if self.input_shape == 1:
+			for p in range(len(input_data)):
+				self.node_output[p] = input_data[p]
+		else: 
+			for p in range(len(self.node_output)):
+				self.node_output[p, :] = input_data
+
 		if False : # !!!!!! self.recursive:
 			output_vals = self.read_output()
 			for q in range(len(output_vals)):

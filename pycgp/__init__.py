@@ -1,4 +1,7 @@
 from .cgp import CGP
 from .cgpes import CGPES
-from .evaluator import Evaluator
-from .maskevaluator import  MaskEvaluator
+# from .evaluators.evaluator import Evaluator
+# from .evaluators import  SREvaluator
+
+# from .maskevaluator import  MaskEvaluator
+
