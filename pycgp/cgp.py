@@ -194,12 +194,30 @@ class CGP:
 #		print()
 
 	def run(self, inputData):
-		if (not self.graph_created):
-			self.create_graph()
+		"""
+		Runs the CGP program with the given input data.
+
+		Parameters
+		----------
+		inputData: array_like
+			input data to be processed by the CGP program. If inputData is a list of arrays,
+			each array is treated as a separate input. If inputData is a single array, it is
+			treated as a single input.
+
+		Returns
+		-------
+		output: array_like
+			output of the CGP program. The output will have the same shape as the input, unless
+			the input is a list of arrays, in which case the output will be a single array.
+		"""
+
 
 		if isinstance(inputData[0], np.ndarray) and self.input_shape != inputData[0].shape:
 			self.input_shape = inputData[0].shape
 			self.node_output = np.zeros(((self.max_graph_length + self.num_inputs),) + self.input_shape, dtype=self.dtype)
+
+		if (not self.graph_created):
+			self.create_graph()
 
 		self.load_input_data(inputData)
 		self.compute_graph()

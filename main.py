@@ -14,30 +14,12 @@ def build_funcLib():
             CGP.CGPFunc(f_mult, 'mult', 2, 0, '*'),
             CGP.CGPFunc(f_sin, 'sin', 1, 0, 'sin'),
             CGP.CGPFunc(f_cos, 'cos', 1, 0, 'cos'),
-            
-            # CGP.CGPFunc(f_exp, 'exp', 2, 0),
-            # CGP.CGPFunc(f_abs, 'abs', 1, 0),
-            # CGP.CGPFunc(f_sqrt, 'sqrt', 1, 0),
-            # CGP.CGPFunc(f_sqrtxy, 'sqrtxy', 2, 0),
-            # CGP.CGPFunc(f_squared, 'squared', 1, 0),
-            # CGP.CGPFunc(f_pow, 'pow', 2, 0),
-            # CGP.CGPFunc(f_one, 'one', 0, 0),
-            # CGP.CGPFunc(f_zero, 'zero', 0, 0),
-            # CGP.CGPFunc(f_const, 'const', 0, 1),
-            # CGP.CGPFunc(f_asin, 'asin', 1, 0),
-            # CGP.CGPFunc(f_acos, 'acos', 1, 0),
-            # CGP.CGPFunc(f_atan, 'atan', 1, 0),
-            # CGP.CGPFunc(f_min, 'min', 2, 0),
-            # CGP.CGPFunc(f_max, 'max', 2, 0),
-            # CGP.CGPFunc(f_round, 'round', 1, 0),
-            # CGP.CGPFunc(f_floor, 'floor', 1, 0),
-            # CGP.CGPFunc(f_ceil, 'ceil', 1, 0)
             ]
 def fit_me(x):
     return np.sin(x*x*x) + x
 
 def evolve(folder_name, col=10, row=1, nb_ind=16, mutation_rate_nodes=0.1, mutation_rate_outputs=0.3,
-              n_cpus=1, n_it=2000, genome=None):
+              n_cpus=1, n_it=100, genome=None):
     
 
     x_train = np.random.uniform(-5, 5, 100)
@@ -68,9 +50,9 @@ def evolve(folder_name, col=10, row=1, nb_ind=16, mutation_rate_nodes=0.1, mutat
     es.father.to_dot('best.dot', ['x'], ['y'])
     os.system('dot -Tpdf ' + 'best.dot' + ' -o ' + 'best.pdf')
 
-    x = np.linspace(-2, 5, 100)
-
-
+    x = np.linspace(-2, 5, 150)
+    es.father.input_shape = x.shape
+    es.father.graph_created = False
     plt.plot(x_train, y_train, 'rx', label='train')
     plt.plot(x, es.father.run(x)[0], 'b', label='res')
     plt.savefig("graph.png")

@@ -1,20 +1,6 @@
 digraph cgp {
 	size = "4,4";
 	y [shape=oval];
-	sum_7 -> y [label="0"];
-	sum_7 [label= "7_sum", shape=none];
 	x [shape=polygon,sides=6];
-	x -> sum_7 [label="0"];
-	sin_6 -> sum_7 [label="1"];
-	sin_6 [label= "6_sin", shape=none];
-	mult_2 -> sin_6 [label="0"];
-	mult_2 [label= "2_mult", shape=none];
-	mult_0 -> mult_2 [label="0"];
-	mult_0 [label= "0_mult", shape=none];
-	x [shape=polygon,sides=6];
-	x -> mult_0 [label="0"];
-	x [shape=polygon,sides=6];
-	x -> mult_0 [label="1"];
-	x [shape=polygon,sides=6];
-	x -> mult_2 [label="1"];
+	x -> y [label="0"];
 }
