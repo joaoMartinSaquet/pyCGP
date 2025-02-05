@@ -5,15 +5,15 @@ import numpy as np
 import sys
 import os
 import matplotlib.pyplot as plt
-
+import sympy as sp
 
 
 def build_funcLib():
-    return [CGP.CGPFunc(f_sum, 'sum', 2, 0),
-            CGP.CGPFunc(f_aminus, 'aminus', 2, 0),
-            CGP.CGPFunc(f_mult, 'mult', 2, 0),
-            CGP.CGPFunc(f_sin, 'mult', 2, 0),
-            CGP.CGPFunc(f_cos, 'mult', 2, 0),
+    return [CGP.CGPFunc(f_sum, 'sum', 2, 0, '+'),
+            CGP.CGPFunc(f_aminus, 'aminus', 2, 0, '-'),
+            CGP.CGPFunc(f_mult, 'mult', 2, 0, '*'),
+            CGP.CGPFunc(f_sin, 'sin', 1, 0, 'sin'),
+            CGP.CGPFunc(f_cos, 'cos', 1, 0, 'cos'),
             
             # CGP.CGPFunc(f_exp, 'exp', 2, 0),
             # CGP.CGPFunc(f_abs, 'abs', 1, 0),
@@ -34,10 +34,10 @@ def build_funcLib():
             # CGP.CGPFunc(f_ceil, 'ceil', 1, 0)
             ]
 def fit_me(x):
-    return np.sin(x**3) + np.cos(x**2)
+    return np.sin(x*x*x) + x
 
-def evolve(folder_name, col=30, row=1, nb_ind=8, mutation_rate_nodes=0.1, mutation_rate_outputs=0.3,
-              n_cpus=1, n_it=1000, genome=None):
+def evolve(folder_name, col=10, row=1, nb_ind=16, mutation_rate_nodes=0.1, mutation_rate_outputs=0.3,
+              n_cpus=1, n_it=2000, genome=None):
     
 
     x_train = np.random.uniform(-5, 5, 100)
@@ -59,14 +59,22 @@ def evolve(folder_name, col=30, row=1, nb_ind=8, mutation_rate_nodes=0.1, mutati
     #     print(es.father.genome)
     #     print(e.evaluate(es.father, 0))
 
-    es.father.to_function_string(['x'], ['y'])
+    f_str = es.father.to_function_string(['x'], ['y'])
+
+    
+
+
+
     es.father.to_dot('best.dot', ['x'], ['y'])
     os.system('dot -Tpdf ' + 'best.dot' + ' -o ' + 'best.pdf')
 
-    x = np.linspace(-5, 5, 100)
+    x = np.linspace(-2, 5, 100)
+
+
     plt.plot(x_train, y_train, 'rx', label='train')
     plt.plot(x, es.father.run(x)[0], 'b', label='res')
     plt.savefig("graph.png")
+    print("HOF func : ", sp.simplify(f_str[-1]))
 
 def load(file_name):
     print('loading ' + file_name)
