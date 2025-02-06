@@ -16,21 +16,21 @@ def build_funcLib():
             CGP.CGPFunc(f_cos, 'cos', 1, 0, 'cos'),
             ]
 def fit_me(x):
-    return np.sin(x*x*x) + x
+    return np.sin(x*x*x) + x**2
 
-def evolve(folder_name, col=10, row=1, nb_ind=16, mutation_rate_nodes=0.1, mutation_rate_outputs=0.3,
-              n_cpus=1, n_it=100, genome=None):
+def evolve(folder_name, col=10, row=1, nb_ind=8, mutation_rate_nodes=0.1, mutation_rate_outputs=0.2,
+              n_cpus=1, n_it=1000, genome=None):
     
 
     x_train = np.random.uniform(-5, 5, 100)
-    sig = 0.0
-    y_train = fit_me(x_train)
+    sig = 0.01
+    y_train = fit_me(x_train) + np.random.normal(0, sig, 100)
 
-    e = SREvaluator(x_train=x_train, y_train=y_train, loss='mae')
+    e = SREvaluator(x_train=x_train, y_train=y_train, loss='mse')
     
     library = build_funcLib()
     if genome is None:
-        cgpFather = CGP.random(1, 1, col, row, library, 1.0, False, const_min=0, const_max=1, input_shape=x_train.shape, dtype='float')
+        cgpFather = CGP.random(1, 1, col, row, library, 1, False, const_min=0, const_max=1, input_shape=x_train.shape, dtype='float')
     else:
         cgpFather = CGP.load_from_file(genome, library)
     print(cgpFather.genome)
@@ -56,14 +56,14 @@ def evolve(folder_name, col=10, row=1, nb_ind=16, mutation_rate_nodes=0.1, mutat
     plt.plot(x_train, y_train, 'rx', label='train')
     plt.plot(x, es.father.run(x)[0], 'b', label='res')
     plt.savefig("graph.png")
-    print("HOF func : ", sp.simplify(f_str[-1]))
+    print("HOF not simplified : ", f_str[-1])
+    print("HOF func simplified : ", sp.simplify(f_str[-1]))
 
-def load(file_name):
-    print('loading ' + file_name)
-    library = build_funcLib()
-    c = CGP.load_from_file(file_name, library)
-    e = SinEvaluator()
-    print(e.evaluate(c, 0, displayTrace=True))
+# def load(file_name):
+#     print('loading ' + file_name)
+#     library = build_funcLib()
+#     c = CGP.load_from_file(file_name, library)
+#     print(e.evaluate(c, 0, displayTrace=True))
    
 def toDot(file_name, out_name):
     print('Exporting ' + file_name + ' in dot ' + out_name + '.dot')

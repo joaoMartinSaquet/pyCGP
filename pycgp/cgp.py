@@ -2,52 +2,8 @@ import sys
 import numpy as np
 import random as rnd
 import re
+from .utils import prefix_to_infix
 
-def prefix_to_infix(expr, instructions , symbols, arity):
-    expr = expr.strip().rstrip(';')  # Remove trailing semicolon if present
-    
-    # Base case: If it's just a variable or number, return it as-is
-    if expr.isalnum():
-        return expr
-
-    # Match function-like expressions: func(arg1, arg2)
-    match = re.match(r'(\w+)\((.*)\)', expr)
-    if not match:
-        return expr  # Return as-is if it's not a function call
-
-    operator = match.group(1)  # Function name (e.g., sum, mult, sin)
-    inner_expr = match.group(2)  # Arguments inside parentheses
-
-    # Split arguments while handling nested parentheses
-    args = []
-    balance = 0
-    start = 0
-
-    for i, char in enumerate(inner_expr):
-        if char == '(':
-            balance += 1
-        elif char == ')':
-            balance -= 1
-        elif char == ',' and balance == 0:
-            args.append(inner_expr[start:i].strip())
-            start = i + 1
-
-    args.append(inner_expr[start:].strip())  # Add last argument
-
-    # Recursively process arguments
-    args = [prefix_to_infix(arg, instructions, symbols, arity) for arg in args]
-
-
-    
-    # Convert based on known operators
-    if operator in instructions and len(args) == 2:
-        print(instructions.index(operator))
-        return f"({args[0]} {symbols[instructions.index(operator)]} {args[1]})"
-    elif len(args) == 1:
-        return f"{operator}({args[0]})"
-    
-    # If function is unknown, return as-is
-    return f"{operator}({', '.join(args)})"
 class CGP: 	
 
 	class CGPFunc:
@@ -75,7 +31,7 @@ class CGP:
 			num_cols (_type_): number of cols 
 			num_rows (_type_): number of rows
 			library (_type_): Library ID
-			recurrency_distance (float, optional): _description_. Defaults to 1.0.
+			recurrency_distance (float, optional): recurrency distance between nodes, 0 means no recurency, 1 means full recurrency. Defaults to 1.0. 
 			recursive (bool, optional): _description_. Defaults to False.
 			const_min (int, optional): _description_. Defaults to 0.
 			const_max (int, optional): _description_. Defaults to 255.
@@ -261,21 +217,45 @@ class CGP:
 				self.genome[index] = rnd.randint(0, self.num_inputs + self.num_cols * self.num_rows - 1)
 	
 	def mutate_per_gene(self, mutation_rate_nodes, mutation_rate_outputs):
+		"""
+			Gene mutation, with a certain rate, mutation consist of changing a single gene representing the connection of the node or the function 	
+		
+		Parameters
+		----------
+		mutation_rate_nodes: float
+			probability of a node being mutated
+		mutation_rate_outputs: float
+			probability of an output being mutated
+		
+		Returns
+		-------
+		None
+		"""
 		node_size = self.max_arity + self.max_const_params + 1
 		for index in range(0, len(self.genome)):
+
+			# output nodes condition
 			if index < self.num_cols * self.num_rows * node_size:
 				# this is an internal node
 				if rnd.random() < mutation_rate_nodes:
+					# function index of the node
 					if index % node_size == 0:
 						# mutate function
 						self.genome[index] = rnd.randint(0, len(self.library) - 1)
+
+					# connections index condition
 					elif index % node_size <= self.max_arity:
 						# mutate connection
 						node_index = int(index / node_size)
 						col_index = int(node_index / self.num_rows)
-						self.genome[index] = rnd.randint(0, self.num_inputs + col_index * self.num_rows - 1)
-#						self.genome[index] = rnd.randint(0, int(min(self.max_graph_length + self.num_inputs - 1, (self.num_inputs + (
-#									int(index /node_size) - 1) * self.num_rows) * self.recurrency_distance)))
+
+						lower_bounds = (col_index-self.recurrency_distance)*self.num_rows + 1
+						lower_bounds = 0 # old
+						# ensure that the new connection is inferior to current node id
+						self.genome[index] = rnd.randint(lower_bounds, self.num_inputs + col_index * self.num_rows - 1)
+						
+						# self.genome[index] = rnd.randint(0, int(min(self.max_graph_length + self.num_inputs - 1, (self.num_inputs + (
+						# 			node_index - 1) * self.num_rows) * self.recurrency_distance)))
 					else:
 						# mutate a const param
 						self.genome[index] = rnd.randint(self.const_min, self.const_max)
@@ -336,7 +316,7 @@ class CGP:
 # 					const_param = self.nodes[self.nodes_used[i]].const_params[j]
 # 					current_const_param = current_nodes[current_node_used[i]].const_params[j]
 # 					has_functionnaly_mutated = has_functionnaly_mutated or const_param != current_const_param
-# 			i += 1
+# 			i += 1N_COLS
 
 	def to_dot(self, file_name, input_names, output_names):
 		#TODO: display const_params
@@ -355,7 +335,7 @@ class CGP:
 	def _write_dot_from_gene(self, to_name, pos, out, a, input_names, output_names):
 		if pos < self.num_inputs:
 			out.write('\t' + input_names[pos] + ' [shape=polygon,sides=6];\n')
-			out.write('\t' + input_names[pos] + ' -> ' + to_name + ' [label="' + str(a) + '"];\n')
+			out.write('\t' + input_names[pos] + ' -> ' + to_name + ' [laN_COLSbel="' + str(a) + '"];\n')
 			self.dot_rec_visited_nodes = np.append(self.dot_rec_visited_nodes, [pos])
 		else:
 			pos -= self.num_inputs
@@ -455,6 +435,7 @@ class CGP:
 		out.write(str(self.num_outputs) + ' ')
 		out.write(str(self.num_cols) + ' ')
 		out.write(str(self.num_rows) + ' ')
+
 		# retrocomptability mechanisms:
 		# recursivity is stored as last parameters
 		# inputs are stored with recursive output values if recursivity is on

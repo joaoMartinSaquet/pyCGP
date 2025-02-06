@@ -1,6 +1,24 @@
 digraph cgp {
 	size = "4,4";
 	y [shape=oval];
+	sum_4 -> y [label="0"];
+	sum_4 [label= "4_sum", shape=none];
+	aminus_3 -> sum_4 [label="0"];
+	aminus_3 [label= "3_aminus", shape=none];
+	sum_2 -> aminus_3 [label="0"];
+	sum_2 [label= "2_sum", shape=none];
+	aminus_1 -> sum_2 [label="0"];
+	aminus_1 [label= "1_aminus", shape=none];
+	mult_0 -> aminus_1 [label="0"];
+	mult_0 [label= "0_mult", shape=none];
 	x [shape=polygon,sides=6];
-	x -> y [label="0"];
+	x -> mult_0 [laN_COLSbel="0"];
+	x [shape=polygon,sides=6];
+	x -> mult_0 [laN_COLSbel="1"];
+	x [shape=polygon,sides=6];
+	x -> aminus_1 [laN_COLSbel="1"];
+	x [shape=polygon,sides=6];
+	x -> sum_2 [laN_COLSbel="1"];
+	mult_0 -> aminus_3 [label="1"];
+	mult_0 -> sum_4 [label="1"];
 }

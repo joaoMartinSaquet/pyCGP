@@ -23,5 +23,8 @@ class SREvaluator(Evaluator):
 
         # -loss because we want to minimize the error
         return -loss
+
+    def clone(self):
+        return SREvaluator(self.x_train, self.y_train)
     
     
