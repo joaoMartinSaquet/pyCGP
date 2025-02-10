@@ -3,6 +3,7 @@ import numpy as np
 import random as rnd
 import re
 from .utils import prefix_to_infix
+import networkx as nx
 
 class CGP: 	
 
@@ -56,9 +57,12 @@ class CGP:
 		self.recurrency_distance = recurrency_distance
 		self.input_shape = input_shape
 		self.dtype = dtype
+
 		for f in self.library:
 			self.max_arity = np.maximum(self.max_arity, f.arity)
 			self.max_const_params = np.maximum(self.max_const_params, f.const_params)
+		
+		self.node_size = self.max_arity + self.max_const_params + 1
 		self.graph_created = False
 
 	def create_graph(self):
@@ -193,17 +197,17 @@ class CGP:
 		return CGP(self.genome, self.num_inputs, self.num_outputs, self.num_cols, self.num_rows, self.library, self.recurrency_distance, self.recursive, self.const_min, self.const_max, self.input_shape, self.dtype)
 
 	def mutate(self, num_mutationss):
-		node_size = self.max_arity + self.max_const_params + 1
+		self.node_size = self.max_arity + self.max_const_params + 1
 		for i in range(0, num_mutationss):
 			index = rnd.randint(0, len(self.genome) - 1)
-			if index < self.num_cols * self.num_rows * node_size:
+			if index < self.num_cols * self.num_rows * self.node_size:
 				# this is an internal node
-				if index % node_size == 0:
+				if index % self.node_size == 0:
 					# mutate function
 					self.genome[index] = rnd.randint(0, len(self.library) - 1)
-				elif index % node_size <= self.max_arity:
+				elif index % self.node_size <= self.max_arity:
 					# mutate connection
-					node_index = int(index / node_size)
+					node_index = int(index / self.node_size)
 					col_index = int(node_index / self.num_rows)
 					self.genome[index] = rnd.randint(0, self.num_inputs + col_index * self.num_rows - 1)
 				else:
@@ -231,22 +235,21 @@ class CGP:
 		-------
 		None
 		"""
-		node_size = self.max_arity + self.max_const_params + 1
 		for index in range(0, len(self.genome)):
 
 			# output nodes condition
-			if index < self.num_cols * self.num_rows * node_size:
+			if index < self.num_cols * self.num_rows * self.node_size:
 				# this is an internal node
 				if rnd.random() < mutation_rate_nodes:
 					# function index of the node
-					if index % node_size == 0:
+					if index % self.node_size == 0:
 						# mutate function
 						self.genome[index] = rnd.randint(0, len(self.library) - 1)
 
 					# connections index condition
-					elif index % node_size <= self.max_arity:
+					elif index % self.node_size <= self.max_arity:
 						# mutate connection
-						node_index = int(index / node_size)
+						node_index = int(index / self.node_size)
 						col_index = int(node_index / self.num_rows)
 
 						lower_bounds = (col_index-self.recurrency_distance)*self.num_rows + 1
@@ -451,6 +454,123 @@ class CGP:
 			out.write(f.name + ' ')
 		out.close()
 
+	# def entire_netx_graph(self, inputs_names=None, output_names=None):
+	# 	""" TODO investigate doesn't display 2 edges (custom nodes ?)
+
+	# 	Returns:
+	# 		_type_: _description_
+	# 	"""
+	# 	G = nx.MultiDiGraph()
+
+
+	# 	# matching nodes contain 
+	# 	match_nodes = {}
+	# 	# crete inputs nodes
+	# 	for i in range(0, self.num_inputs):
+	# 		print("input node ", i)
+	# 		match_nodes[i] = inputs_names[i]
+	# 		G.add_node(i, labels=inputs_names[i])
+
+	# 	for ind ,n in enumerate(self.nodes):
+	# 		i = ind + self.num_inputs
+	# 		G.add_node(i, labels=f"{i}_" + self.library[n.function].name )
+	# 		con_index = 0
+	# 		for a in n.args:
+	# 			arity = self.library[n.function].arity 
+	# 			if arity > con_index:
+	# 				# print(f"connection index : {con_index}, arity {arity}")
+
+	# 				# print("edge : {} -> {}".format(a, i))
+	# 				G.add_edge(a, i, key=con_index)
+	# 				con_index += 1
+	# 		for c in n.const_params:
+	# 			G.add_edge(c, i)
+
+	# 		match_nodes[i] = f"{i}_".format(i) + self.library[n.function].name
+		
+	# 			# decodes output genes
+	# 	outputs_ids = []
+	# 	for i in range(0, self.num_outputs):
+	# 		print("output node")
+
+	# 		output_id = int(len(self.genome - self.num_outputs) / self.node_size) + i + self.num_inputs
+	# 		match_nodes[output_id] = output_names[i]
+	# 		G.add_node(output_id, labels=output_names[i])
+	# 		outputs_ids.append(output_id)
+	# 	# edge output
+	# 	for o in range(len(self.output_genes)):
+	# 		G.add_edge(self.output_genes[o], outputs_ids[o])
+			
+	# 	G.add_nodes_from(self.output_genes, labels="out")
+	# 	G = nx.relabel_nodes(G, match_nodes)
+	# 	print(f"edges : {G.edges}")
+	# 	return G
+
+	def netx_graph(self, inputs_names=None, output_names=None, active = True, simple_label=True):
+		
+		G = nx.MultiDiGraph()
+		# matching nodes contain 
+		match_nodes = {}
+		# crete inputs nodes
+		for i in range(0, self.num_inputs):
+			print("input node ", i)
+			match_nodes[i] = inputs_names[i]
+			G.add_node(i, labels=inputs_names[i])
+
+		# nodes drawing
+		if active:
+			print("active nodes id : ", self.nodes_used[::-1])
+			nodes_id = self.nodes_used[::-1]
+			nodes = self.nodes[self.nodes_used[::-1]]
+		else:
+			nodes = self.nodes
+			nodes_id = [i for i in range(0, len(self.nodes))]
+
+		for ind, n in enumerate(nodes):
+			i = nodes_id[ind] + self.num_inputs
+
+			if simple_label:
+				label = self.library[n.function].name
+			else:
+				label = f"{i}_" + self.library[n.function].name
+			G.add_node(i, labels=label)
+			con_index = 0
+			for a in n.args:
+				arity = self.library[n.function].arity 
+				if arity > con_index:
+					# print(f"connection index : {con_index}, arity {arity}")
+
+					# print("edge : {} -> {}".format(a, i))
+					G.add_edge(a, i, key=con_index)
+					con_index += 1
+			for c in n.const_params:
+				G.add_edge(c, i)
+
+			
+			match_nodes[i] = label
+		
+				# decodes output genes
+		outputs_ids = []
+		for i in range(0, self.num_outputs):
+			output_id = int(len(self.genome - self.num_outputs) / self.node_size) + i + self.num_inputs
+			match_nodes[output_id] = output_names[i]
+			G.add_node(output_id, labels=output_names[i])
+			outputs_ids.append(output_id)
+		# edge output
+		for o in range(len(self.output_genes)):
+			if active:
+				G.add_edge(self.output_genes[o], outputs_ids[o])
+			else:
+				G.add_edge(self.output_genes[o], outputs_ids[o])
+			
+		G.add_nodes_from(self.output_genes, labels="out")
+		print("output nodes id : ", self.output_genes)
+		print(f"edges : {G.edges}")
+		print(f"nodes : {G.nodes}")	
+		G = nx.relabel_nodes(G, match_nodes)
+
+		return G
+
 	@classmethod
 	def load_from_file(cls, file_name, library, input_shape=1, dtype=int):
 		inp = open(file_name, 'r')
@@ -479,4 +599,5 @@ class CGP:
 			c.mutate(1)
 			print(c.genome)
 			print(c.run([1,2]))
+
 
