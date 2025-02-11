@@ -6,7 +6,11 @@ from .utils import prefix_to_infix
 import networkx as nx
 
 class CGP: 	
+	"""CGP Class defined by a genotype where each genes are F_id,Con0,Con1---ConMaxArity
 
+	Returns:
+		_type_: _description_
+	"""
 	class CGPFunc:
 		def __init__(self, f, name, arity, const_params=0, sympy_symbol = ''):
 			self.function = f
@@ -94,18 +98,37 @@ class CGP:
 		self.graph_created = True
 	
 	def node_to_evaluate(self):
+		"""
+		"""
+		# get nodes to evaluate from output genes
 		p = 0
+		id_to_evaluate = []
 		while p < self.num_outputs:
+
+			# if output genes is not inputs
 			if self.output_genes[p] - self.num_inputs >= 0:
-				self.to_evaluate[self.output_genes[p] - self.num_inputs] = True
+				id_to_evaluate.append(self.output_genes[p] - self.num_inputs)
+				self.to_evaluate[id_to_evaluate[-1]] = True
 			p = p + 1
-		p = self.max_graph_length - 1
+
+		# get nodes to evaluate from output nodes
+		if len(id_to_evaluate) > 0:
+			p = max(id_to_evaluate)
+		else:
+			p = self.max_graph_length - 1
+		
 		while p >= 0:
 			if self.to_evaluate[p]:
-				for i in range(0, len(self.nodes[p].args)):
-					arg = self.nodes[p].args[i]
-					if arg - self.num_inputs >= 0:
-						self.to_evaluate[arg - self.num_inputs] = True
+				con_index = 0
+				t_nodes =  self.nodes[p]
+				t_arity = self.library[t_nodes.function].arity
+				if t_arity > con_index:
+					for i in range(0, len(self.nodes[p].args)):
+
+						arg = self.nodes[p].args[i]
+						if arg - self.num_inputs >= 0:
+							self.to_evaluate[arg - self.num_inputs] = True
+					con_index += 1
 				self.nodes_used.append(p)
 			p = p - 1
 		self.nodes_used = np.array(self.nodes_used)
@@ -146,13 +169,8 @@ class CGP:
 				if (self.node_output[self.nodes_used[p] + self.num_inputs] < -1.0 or
 					self.node_output[self.nodes_used[p] + self.num_inputs] > 1.0):
 					print(self.library[self.nodes[self.nodes_used[p]].function].name, ' returned ', self.node_output[self.nodes_used[p] + self.num_inputs], ' with ', args)
-
 			p = p - 1
-
-#		for i in range(0, self.node_output.shape[0]):
-#			print(str(self.node_output[i].max())+', '+str(self.node_output[i].mean()), end=', ')
-#		print()
-
+	
 	def run(self, inputData):
 		"""
 		Runs the CGP program with the given input data.
@@ -454,60 +472,10 @@ class CGP:
 			out.write(f.name + ' ')
 		out.close()
 
-	# def entire_netx_graph(self, inputs_names=None, output_names=None):
-	# 	""" TODO investigate doesn't display 2 edges (custom nodes ?)
-
-	# 	Returns:
-	# 		_type_: _description_
-	# 	"""
-	# 	G = nx.MultiDiGraph()
-
-
-	# 	# matching nodes contain 
-	# 	match_nodes = {}
-	# 	# crete inputs nodes
-	# 	for i in range(0, self.num_inputs):
-	# 		print("input node ", i)
-	# 		match_nodes[i] = inputs_names[i]
-	# 		G.add_node(i, labels=inputs_names[i])
-
-	# 	for ind ,n in enumerate(self.nodes):
-	# 		i = ind + self.num_inputs
-	# 		G.add_node(i, labels=f"{i}_" + self.library[n.function].name )
-	# 		con_index = 0
-	# 		for a in n.args:
-	# 			arity = self.library[n.function].arity 
-	# 			if arity > con_index:
-	# 				# print(f"connection index : {con_index}, arity {arity}")
-
-	# 				# print("edge : {} -> {}".format(a, i))
-	# 				G.add_edge(a, i, key=con_index)
-	# 				con_index += 1
-	# 		for c in n.const_params:
-	# 			G.add_edge(c, i)
-
-	# 		match_nodes[i] = f"{i}_".format(i) + self.library[n.function].name
-		
-	# 			# decodes output genes
-	# 	outputs_ids = []
-	# 	for i in range(0, self.num_outputs):
-	# 		print("output node")
-
-	# 		output_id = int(len(self.genome - self.num_outputs) / self.node_size) + i + self.num_inputs
-	# 		match_nodes[output_id] = output_names[i]
-	# 		G.add_node(output_id, labels=output_names[i])
-	# 		outputs_ids.append(output_id)
-	# 	# edge output
-	# 	for o in range(len(self.output_genes)):
-	# 		G.add_edge(self.output_genes[o], outputs_ids[o])
-			
-	# 	G.add_nodes_from(self.output_genes, labels="out")
-	# 	G = nx.relabel_nodes(G, match_nodes)
-	# 	print(f"edges : {G.edges}")
-	# 	return G
 
 	def netx_graph(self, inputs_names=None, output_names=None, active = True, simple_label=True):
 		
+		print("created graph ? ", self.graph_created)
 		G = nx.MultiDiGraph()
 		# matching nodes contain 
 		match_nodes = {}
@@ -519,27 +487,34 @@ class CGP:
 
 		# nodes drawing
 		if active:
-			print("active nodes id : ", self.nodes_used[::-1])
+			print("active nodes id : ", self.nodes_used)
 			nodes_id = self.nodes_used[::-1]
-			nodes = self.nodes[self.nodes_used[::-1]]
+			nodes = self.nodes[self.nodes_used][::-1]
+
+			for n in nodes :
+				print("node function ", self.library[n.function].name, end = ' ')
+				print("nodes args ", n.args)
 		else:
 			nodes = self.nodes
 			nodes_id = [i for i in range(0, len(self.nodes))]
 
+		# print("nodes : ", nodes_id)
 		for ind, n in enumerate(nodes):
 			i = nodes_id[ind] + self.num_inputs
-
-			if simple_label:
+			# print("node id ", i)
+			if simple_label:	
 				label = self.library[n.function].name
 			else:
 				label = f"{i}_" + self.library[n.function].name
 			G.add_node(i, labels=label)
 			con_index = 0
 			for a in n.args:
+				
 				arity = self.library[n.function].arity 
-				if arity > con_index:
-					# print(f"connection index : {con_index}, arity {arity}")
+				# print("function : ", self.library[n.function].name, "args ? ", n.args)
 
+				if arity > con_index:	
+					# print(f"connection index : {con_index}, arity {arity}", end=' ')
 					# print("edge : {} -> {}".format(a, i))
 					G.add_edge(a, i, key=con_index)
 					con_index += 1
@@ -549,7 +524,7 @@ class CGP:
 			
 			match_nodes[i] = label
 		
-				# decodes output genes
+		# decodes output genes
 		outputs_ids = []
 		for i in range(0, self.num_outputs):
 			output_id = int(len(self.genome - self.num_outputs) / self.node_size) + i + self.num_inputs
@@ -558,9 +533,6 @@ class CGP:
 			outputs_ids.append(output_id)
 		# edge output
 		for o in range(len(self.output_genes)):
-			if active:
-				G.add_edge(self.output_genes[o], outputs_ids[o])
-			else:
 				G.add_edge(self.output_genes[o], outputs_ids[o])
 			
 		G.add_nodes_from(self.output_genes, labels="out")

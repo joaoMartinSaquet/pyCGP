@@ -1,12 +1,12 @@
 digraph cgp {
 	size = "4,4";
 	y [shape=oval];
-	sin_18 -> y [label="0"];
-	sin_18 [label= "18_sin", shape=none];
-	mult_2 -> sin_18 [label="0"];
-	mult_2 [label= "2_mult", shape=none];
+	sin_5 -> y [label="0"];
+	sin_5 [label= "5_sin", shape=none];
+	mult_0 -> sin_5 [label="0"];
+	mult_0 [label= "0_mult", shape=none];
 	x [shape=polygon,sides=6];
-	x -> mult_2 [laN_COLSbel="0"];
+	x -> mult_0 [laN_COLSbel="0"];
 	x [shape=polygon,sides=6];
-	x -> mult_2 [laN_COLSbel="1"];
+	x -> mult_0 [laN_COLSbel="1"];
 }

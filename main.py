@@ -44,11 +44,10 @@ def base(folder_name, col=30, row=1, nb_ind=4, mutation_rate_nodes=0.1, mutation
     plt.plot(x, best.run(x)[0], 'b', label='res')
     # plt.savefig("graph.png")
     plt.figure()
-    G = best.netx_graph(['x'], ['y'], active=False)
-    draw_net(G, y_offset=100)
-    G = best.netx_graph(['x'], ['y'], active=True)
+    G = best.netx_graph(['x'], ['y'], active=True, simple_label=False)
+    draw_net(G, y_offset=100, node_color='red')
+    G = best.netx_graph(['x'], ['y'], active=False, simple_label=False)
     draw_net(G, y_offset=400, node_shape='s')
-    
 
     print("HOF not si   mplified : ", f_str[-1])   
     print("HOF func simplified : ", sp.simplify(f_str[-1]))
@@ -86,10 +85,6 @@ def roses(folder_name, col=30, row=1, nb_ind=4, mutation_rate_nodes=0.1, mutatio
     # e = SREvaluator(x_train=x_train, y_train=y_train, loss='mse')
     
     
-    
-    
-    
-    
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     ax.plot_surface(X, Y, Z, rstride=1, cstride=1, cmap='Reds')
@@ -117,7 +112,7 @@ if __name__ == '__main__':
     if len(sys.argv) == 1:
         print('Starting for roses')
         base('test')
-        roses('test')
+        # roses('test')
     if len(sys.argv)==2:
         print('Starting evolution from random genome')
         evolve(sys.argv[1])
