@@ -1,6 +1,6 @@
 import networkx as nx
 
-def draw_net(G,  n_input, n_output, node_size=2000, y_offset=0, node_color = 'lightblue', edge_color = 'black', node_shape='o', alpha=0.5, delta = 2):
+def draw_net(ax, G,  n_input, n_output, node_size=2000, y_offset=0, node_color = 'lightblue', edge_color = 'black', node_shape='o', alpha=0.5, delta = 2):
     # TODO add diff color for input, + handle n_output
     pos = nx.spring_layout(G)
 

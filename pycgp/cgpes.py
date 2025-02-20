@@ -110,7 +110,7 @@ class CGPES_ml:
 		self.initialized = True
 		self.it = 0
 
-	def run(self, num_iteration):
+	def run(self, num_iteration, term_criteria):
 		if not self.initialized:
 			self.initialize()
 
@@ -158,6 +158,8 @@ class CGPES_ml:
 			self.logfile.flush()
 			self.fitness_history.append(np.mean(self.hof_fit))
 
+			if np.abs(np.mean(self.hof_fit)) <= term_criteria:
+				break
 			# find how to save now 
 			# print('====================================================')
 			# if self.father_was_updated:

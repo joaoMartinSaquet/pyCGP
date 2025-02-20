@@ -29,20 +29,22 @@ def build_funcLib():
             ]
 def fit_me(x):
     return np.sin(x*x) + np.cos(x)
+    # return 10+x 
 
-def base(folder_name, nb_ind=8, mutation_rate_nodes=0.2, mutation_rate_outputs=0.2,
-              n_cpus=1, n_it=1000, genome=None):
+def base(folder_name):
     
     Ntrain = 100
     x_train = np.random.uniform(-5, 5, (Ntrain, 1))
     sig = 0.0
     y_train = fit_me(x_train) + np.random.normal(0, sig, x_train.shape)
+
     # library = build_funcLib()
-    e = SREvaluator(x_train=x_train, y_train=y_train, n_inputs=1, n_outputs=1, loss='mse')
-    
-    best, hist = e.evolve(nb_ind, mutation_rate_nodes, mutation_rate_outputs, n_cpus, n_it, folder_name)
-    
-    e.best_logs(['x'], ['y'])
+    # x_train = np.hstack((x_train, c*np.ones(x_train.shape)))
+    e = SREvaluator(x_train=x_train, y_train=y_train, n_inputs=1, n_outputs=1, col=30, loss='mse')
+    best, hist = e.evolve(mu=4, nb_ind=8, n_it = 5000, folder_name=folder_name)
+    input_name = ['x', 'c']
+    output_name = ['y']
+    e.best_logs(input_name, output_name)
 
     
     # best.to_dot('best.dot', ['x'], ['y'])
@@ -51,18 +53,22 @@ def base(folder_name, nb_ind=8, mutation_rate_nodes=0.2, mutation_rate_outputs=0
     x = np.linspace(-10, 10, 1000).reshape((1000,1))
 
     y_pred = best.run(x)[0]
-    plt.plot(x_train, y_train, 'rx', label='train')
-    plt.plot(x, y_pred, 'b', label='res')
+
+
+    R2 =  metrics.r2_score(fit_me(x), y_pred)
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 2, 1)
+    ax.plot(x_train, y_train, 'rx', label='train')
+    ax.plot(x, y_pred, 'b', label='res')
+    plt.legend()
+
+    ax = fig.add_subplot(1, 2, 2)
     # plt.savefig("graph.png")
-    plt.figure()
-    G = best.netx_graph(['x'], ['y'], active=True, simple_label=False)
-    draw_net(G, 1, 1, y_offset=100, node_color='red')
-    G = best.netx_graph(['x'], ['y'], active=False, simple_label=False)
-    draw_net(G, 1, 1, y_offset=400, node_shape='s')
-    print("R2 score : ", metrics.r2_score(fit_me(x), y_pred))
-    plt.figure()
-    plt.plot(hist)
-    plt.show()
+    G = best.netx_graph(input_name, output_name, active=True, simple_label=True)
+    draw_net(ax, G, 2, 1, y_offset=100, node_color='red')
+    fig.suptitle("R2 = " + str(R2))
+
+
 
 # def load(file_name):
 #     print('loading ' + file_name)
@@ -206,7 +212,7 @@ def winequality():
             ]
     wine_evaluator = SREvaluator(x_train, y_train, n_inputs=x_train.shape[-1], n_outputs=1, col=min(x_train.shape)*10, library=wine_lib, loss='mse')
 
-    hof, hist = wine_evaluator.evolve(nb_ind=16, n_it=1000, mutation_rate_nodes=0.2, mutation_rate_outputs=0.2, folder_name='winequality')
+    hof, hist = wine_evaluator.evolve(mu=4 ,nb_ind=16, n_it=1000, folder_name='winequality')
     ax = fig.add_subplot(1,3,2)
     # input_name = ['fa', 'va', 'ca', 'su', 'fs', 'al']
     input_name = ['fa', 'va', 'ca', 'rs', 'chl', 'fs', 'ts', 'd', 'pH', 'sl', 'al']
@@ -241,14 +247,19 @@ def strogatz_glider1():
     '''
         x' = -0.05 * x**2 - sin(y)
     '''
+    
+    c = -0.05
+    
     # get data using pmlb
-    pdata = pmlb.fetch_data("strogatz_glider2")
+    pdata = pmlb.fetch_data("strogatz_glider1")
+
     pdata = pdata.sample(frac=1, random_state=42).reset_index(drop=True)
+    pdata['cst'] = c*np.ones(len(pdata))
     y = pdata['target'].to_numpy()
-    x = pdata[["x", "y"]].to_numpy()
+    x = pdata[["x", "y", 'cst']].to_numpy()
 
     split_ind = round(len(pdata) * 0.5 )
-    xtrain = x[:split_ind]
+    xtrain = x[:split_ind] 
     ytrain = y[:split_ind]
 
     xtest = x[split_ind:]
@@ -257,25 +268,25 @@ def strogatz_glider1():
     lib = [CGP.CGPFunc(f_sum, 'sum', 2, 0, '+'),
             CGP.CGPFunc(f_aminus, 'aminus', 2, 0, '-'),
             CGP.CGPFunc(f_mult, 'mult', 2, 0, '*'),
-            CGP.CGPFunc(f_exp, 'exp', 1, 0, 'exp'),
-            CGP.CGPFunc(f_log, 'log', 1, 0, 'ln'),
-            CGP.CGPFunc(f_sqrt, 'sqrt', 1, 0, 'sqrt'),
-            CGP.CGPFunc(f_div, 'div', 2, 0, '//'),
+            # CGP.CGPFunc(f_exp, 'exp', 1, 0, 'exp'),
+            # CGP.CGPFunc(f_log, 'log', 1, 0, 'ln'),
+            # # CGP.CGPFunc(f_sqrt, 'sqrt', 1, 0, 'sqrt'),
+            # CGP.CGPFunc(f_div, 'div', 2, 0, '//'),
             CGP.CGPFunc(f_sin, 'sin', 1, 0, 'sin'),
-            CGP.CGPFunc(f_cos, 'cos', 1, 0, '   cos')
-            # CGP.CGPFunc(f_floor, 'floor', 2, 0, '_'),
+            CGP.CGPFunc(f_cos, 'cos', 1, 0, '   cos'),
+            # CGP.CGPFunc(f_const, 'cst', 0, 1, 'c1'),  
             # CGP.CGPFunc(f_ceil, 'ceil', 2, 0, '~')
 
             ]
     
 
-    evaluator = SREvaluator(xtrain, ytrain, n_inputs=2, n_outputs=1, col=60, library=lib, loss='mse')
+    evaluator = SREvaluator(xtrain, ytrain, n_inputs=3, n_outputs=1, col=20, library=lib, loss='mse')
     
-    hof, hist = evaluator.evolve(nb_ind=16, n_it=3000)
+    hof, hist = evaluator.evolve(mu=8, nb_ind=32, n_it=5000)
 
 
     try:
-        evaluator.best_logs(['x', 'y'], ['yp'])
+        evaluator.best_logs(['x', 'y', 'c1'], ['yp'])
     except Exception as e:
         print(e)
 
@@ -319,6 +330,7 @@ if __name__ == '__main__':
     # elif len(sys.argv)==3:
     #     print('Starting evolution from genome saved in ', sys.argv[2])
         # evo(sys.argv[1], genome=sys.argv[2])
-    winequality()
-    # base('test')
-    strogatz_glider1()
+    # winequality()
+    base('test')
+    # strogatz_glider1()
+    plt.show()

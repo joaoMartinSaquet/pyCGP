@@ -53,11 +53,12 @@ class SREvaluator(Evaluator):
     def clone(self):
         return SREvaluator(self.x_train, self.y_train)
     
-    def evolve(self, nb_ind = 4, mutation_rate_nodes = 0.2, mutation_rate_outputs=0.4, n_cpus=1, n_it=500, folder_name='test'):
+    def evolve(self, mu, nb_ind = 4, mutation_rate_nodes = 0.2, mutation_rate_outputs=0.2, n_cpus=1, n_it=500, folder_name='test', term_criteria=1e-6):
 
+        self.mu = mu
         if self.es == "m+l":
             es = CGPES_ml(self.mu, nb_ind, mutation_rate_nodes, mutation_rate_outputs, self.hof, self, folder_name, n_cpus)
-            es.run(n_it)
+            es.run(n_it, term_criteria=term_criteria)
             fit_history = es.fitness_history
             best = es.hof[np.argmax(es.hof_fit)]
         else :
