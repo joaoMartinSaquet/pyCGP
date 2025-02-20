@@ -52,7 +52,7 @@ def prefix_to_infix(expr, instructions , symbols, arity):
     
     # Convert based on known operators
     if operator in instructions and len(args) == 2:
-        print(instructions.index(operator))
+        # print(instructions.index(operator))
         return f"({args[0]} {symbols[instructions.index(operator)]} {args[1]})"
     elif len(args) == 1:
         return f"{operator}({args[0]})"

@@ -134,12 +134,17 @@ class CGP:
 		self.nodes_used = np.array(self.nodes_used)
         
 	def load_input_data(self, input_data):
+		""" load input data load data inside nodes where each nodes is size of (1, n_data)
+
+		Args:
+			input_data (array of float): data to be loaded when array size is (n_input, n_data)
+		"""
 		if self.input_shape == 1:
 			for p in range(len(input_data)):
 				self.node_output[p] = input_data[p]
 		else: 
-			for p in range(len(self.node_output)):
-				self.node_output[p, :] = input_data
+			for p in range(min(input_data.shape)): # to do maybe just fill inputs nodes and not all the nodes 
+				self.node_output[p, :] = input_data[:, p]
 
 		if False : # !!!!!! self.recursive:
 			output_vals = self.read_output()
@@ -171,13 +176,13 @@ class CGP:
 					print(self.library[self.nodes[self.nodes_used[p]].function].name, ' returned ', self.node_output[self.nodes_used[p] + self.num_inputs], ' with ', args)
 			p = p - 1
 	
-	def run(self, inputData):
+	def run(self, input_data):
 		"""
 		Runs the CGP program with the given input data.
 
 		Parameters
 		----------
-		inputData: array_like
+		inputData: array_like 
 			input data to be processed by the CGP program. If inputData is a list of arrays,
 			each array is treated as a separate input. If inputData is a single array, it is
 			treated as a single input.
@@ -190,14 +195,14 @@ class CGP:
 		"""
 
 
-		if isinstance(inputData[0], np.ndarray) and self.input_shape != inputData[0].shape:
-			self.input_shape = inputData[0].shape
+		if isinstance(input_data, np.ndarray) and max(self.input_shape) != max(input_data.shape):
+			self.input_shape = (max(input_data.shape), )
 			self.node_output = np.zeros(((self.max_graph_length + self.num_inputs),) + self.input_shape, dtype=self.dtype)
 
 		if (not self.graph_created):
 			self.create_graph()
 
-		self.load_input_data(inputData)
+		self.load_input_data(input_data)
 		self.compute_graph()
 		return self.read_output().copy()
 
@@ -375,6 +380,8 @@ class CGP:
 			self.dot_rec_visited_nodes = np.append(self.dot_rec_visited_nodes, [pos + self.num_inputs])
 
 	def to_function_string(self, input_names, output_names):
+
+		output_sep = ';\n'
 		if not self.graph_created:
 			self.create_graph()
 		output = ''
@@ -382,7 +389,7 @@ class CGP:
 			output += (output_names[o] + ' = ')
 			output += self._write_from_gene(self.output_genes[o], input_names, output_names)
 			if o < self.num_outputs-1:
-				output += ';\n'
+				output += output_sep
 			else:
 				output += ';'
 #			output += '\n'
@@ -394,8 +401,10 @@ class CGP:
 			symbol.append(f.sympy_symbol)
 			arity.append(f.arity)
 		
-			
-		infix = prefix_to_infix(output.replace("y = ", ""), instr, symbol, arity)
+		output = output.split(output_sep)
+		infix = []
+		for i, o in enumerate(output):
+			infix.append(prefix_to_infix(o.replace(output_names[i] +  " = ", ""), instr, symbol, arity))
 		# print(output, '-> ', out, end='')
 		return output, infix
 

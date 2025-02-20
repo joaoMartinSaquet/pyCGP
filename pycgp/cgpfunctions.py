@@ -11,7 +11,7 @@ def f_mult(args, const_params):
 	return args[0] * args[1]
 
 def f_exp(args, const_params):
-	return (np.exp(args[0]) - 1.0) / (np.exp(1.0) - 1.0)
+	return np.exp(args[0])
 
 def f_abs(args, const_params):
 	return abs(args[0])
@@ -74,3 +74,15 @@ def f_sin(args, const_params):
 
 def f_cos(args, const_params):
 	return np.cos(args[0])
+
+def f_mod(args, const_params):
+	return np.mod(args[0], args[1])
+
+def f_div(args, cons_params):
+	if args[1].any() == 0:
+		return 0
+	else:
+		return np.divide(args[0], args[1])
+	
+def f_log(args, const_params):
+	return np.log1p(args[0]).astype(np.uint8)
