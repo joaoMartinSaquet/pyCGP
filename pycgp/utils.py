@@ -1,7 +1,5 @@
 import re
 
-
-
 def change_interval (x, inmin, inmax, outmin, outmax):
     # making sure x is in the interval
     x = max(inmin, min(inmax, x))
@@ -21,6 +19,12 @@ def prefix_to_infix(expr, instructions , symbols, arity):
     if expr.isalnum():
         return expr
 
+
+    # releplace c(x) by x
+    const_pattern = r'c\(\s*,\s*(-?[\d.]+)\)'
+    expr = re.sub(const_pattern, r'\1', expr)
+
+    
     # Match function-like expressions: func(arg1, arg2)
     match = re.match(r'(\w+)\((.*)\)', expr)
     if not match:
@@ -59,3 +63,6 @@ def prefix_to_infix(expr, instructions , symbols, arity):
     
     # If function is unknown, return as-is
     return f"{operator}({', '.join(args)})"
+
+
+

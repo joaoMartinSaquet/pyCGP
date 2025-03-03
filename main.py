@@ -1,6 +1,7 @@
-from pycgp import CGP
+from pycgp import CGP, CGP_with_cste
+from pycgp.cgp import CGPFunc
 from pycgp.evaluators import SREvaluator
-from pycgp.viz import draw_net
+from pycgp.viz import draw_net, net_hist_validation
 from pycgp.cgpfunctions import *
 import numpy as np
 import sys
@@ -28,24 +29,32 @@ def build_funcLib():
             CGP.CGPFunc(f_div, 'div', 2, 0, '/')
             ]
 def fit_me(x):
-    return np.sin(x*x) + np.cos(x)
+    # return np.sin(x*x) + np.cos(0.5*x)
     # return 10+x 
+    return np.sin(x)
 
 def base(folder_name):
     
     Ntrain = 100
     x_train = np.random.uniform(-5, 5, (Ntrain, 1))
-    sig = 0.0
+    sig = 0.01
     y_train = fit_me(x_train) + np.random.normal(0, sig, x_train.shape)
 
-    # library = build_funcLib()
-    # x_train = np.hstack((x_train, c*np.ones(x_train.shape)))
-    e = SREvaluator(x_train=x_train, y_train=y_train, n_inputs=1, n_outputs=1, col=30, loss='mse')
-    best, hist = e.evolve(mu=4, nb_ind=8, n_it = 5000, folder_name=folder_name)
-    input_name = ['x', 'c']
-    output_name = ['y']
-    e.best_logs(input_name, output_name)
+    
+    # library = build_funcL
 
+    e = SREvaluator(x_train=x_train, y_train=y_train, n_inputs=1, n_outputs=1, col=30, loss='mse')
+    best, hist = e.evolve(num_csts=1, mu=4, nb_ind=16, n_it = 100, folder_name=folder_name)
+    input_name = ['x']
+    output_name = ['y']
+
+
+    print("cste table ", best.cst_table)
+    sr = None
+    sr = e.best_logs(input_name, output_name)
+    try :
+        sr = e.best_logs(input_name, output_name)
+    except : pass
     
     # best.to_dot('best.dot', ['x'], ['y'])
     # os.system('dot -Tpdf ' + 'best.dot' + ' -o ' + 'best.pdf')
@@ -56,29 +65,26 @@ def base(folder_name):
 
 
     R2 =  metrics.r2_score(fit_me(x), y_pred)
-    fig = plt.figure()
-    ax = fig.add_subplot(1, 2, 1)
-    ax.plot(x_train, y_train, 'rx', label='train')
-    ax.plot(x, y_pred, 'b', label='res')
-    plt.legend()
+    # fig = plt.figure()
+    # ax = fig.add_subplot(1, 2, 1)
+    # ax.plot(x_train[:,0], y_train, 'rx', label='train')
+    # ax.plot(x, y_pred, 'b', label='res')
+    # plt.legend()
 
-    ax = fig.add_subplot(1, 2, 2)
-    # plt.savefig("graph.png")
-    G = best.netx_graph(input_name, output_name, active=True, simple_label=True)
-    draw_net(ax, G, 2, 1, y_offset=100, node_color='red')
-    fig.suptitle("R2 = " + str(R2))
+    # ax = fig.add_subplot(1, 2, 2)
+    # # plt.savefig("graph.png")
+    print("best genome : ", best.genome)
+    print("constante table ", best.cst_table)
+    G = best.netx_graph(input_name, output_name, active=True, simple_label=False)
+    # draw_net(ax, G, 2, 1, y_offset=100, node_color='red')
+    # fig.suptitle("basic regression without constant R2 = " + str(R2) + "equation : " + str(sr[0]))
 
+    net_hist_validation(G, hist, x_train[:,0], y_train, x, y_pred, 2, 1, title="basic regression R2 = " + str(R2) + "\n Equation : " + str(sr)) 
 
-
-# def load(file_name):
-#     print('loading ' + file_name)
-#     library = build_funcLib()
-#     c = CGP.load_from_file(file_name, library)
-#     print(e.evaluate(c, 0, displayTrace=True))
 def roses(folder_name, col=70, row=1, nb_ind=8, mutation_rate_nodes=0.1, mutation_rate_outputs=0.2,
               n_cpus=1, n_it=500, genome=None):
-
-    n = 100
+    # "Deprecated for now"
+    n = 1000
     A = 1.995633
     B = 1.27689
     C = 8
@@ -113,10 +119,10 @@ def roses(folder_name, col=70, row=1, nb_ind=8, mutation_rate_nodes=0.1, mutatio
     y_train = np.array(x.ravel())
     x_train = np.array([R.ravel(), THETA.ravel(),  np.pi*np.ones(shape_vec), A*np.ones(shape_vec), B*np.ones(shape_vec), C*np.ones(shape_vec), 0.25*np.ones(shape_vec), petal_number*np.ones(shape_vec)]) # take directly the ravel ? 
     library = build_funcLib()
-    e = SREvaluator(x_train=x_train, y_train=y_train, n_inputs=8, n_outputs=1, col=col, row=row, library=library, loss='mse')
-    e.evolve(n_it=1000, nb_ind=8)
+    # e = SREvaluator(x_train=x_train, y_train=y_train, n_inputs=8, n_outputs=1, col=col, row=row, library=library, loss='mse')
+    # e.evolve(n_it=1000, nb_ind=8)
 
-    e.best_logs(["r", "th", 'PI', 'A', 'B', 'C', 'Quart', 'Pn'], ['y'])
+    # e.best_logs(["r", "th", 'PI', 'A', 'B', 'C', 'Quart', 'Pn'], ['y'])
 
     red_colormap = {
         'red':   ((0.0, 0.5, 0.1),
@@ -129,14 +135,14 @@ def roses(folder_name, col=70, row=1, nb_ind=8, mutation_rate_nodes=0.1, mutatio
     roses_cm = LinearSegmentedColormap('roses', red_colormap)
     fig = plt.figure()
     ax = fig.add_subplot(1,2,1, projection='3d')
-    ax.plot_surface(X, Y, Z, cmap=roses_cm)
+    ax.plot_surface(X, Y, Z, cmap = 'autumn')
     ax.grid(False)
     ax.set_facecolor('white')
 
-    y_cgp = e.best_evaluate(x_train)
-    ax = fig.add_subplot(1,2,2, projection='3d')
-    ax.plot(R.ravel(), THETA.ravel(), x.ravel(), 'b.')
-    ax.plot(R.ravel(), THETA.ravel(), y_cgp.ravel(), 'r.')
+    # y_cgp = e.best_evaluate(x_train)
+    # ax = fig.add_subplot(1,2,2, projection='3d')
+    # ax.plot(R.ravel(), THETA.ravel(), x.ravel(), 'b.')
+    # ax.plot(R.ravel(), THETA.ravel(), y_cgp.ravel(), 'r.')
     
     # ax.tick_params(left = False, right = False , labelleft = False , 
     #             labelbottom = False, bottom = False) 
@@ -147,21 +153,6 @@ def roses(folder_name, col=70, row=1, nb_ind=8, mutation_rate_nodes=0.1, mutatio
     # ax.plot_surface(y_cgp[0], y_cgp[1], y_cgp[2])
     # ax.plot_surface(y_train[0,:].reshape(n,n), y_train[1,:].reshape(n,n), y_train[2,:].reshape(n,n))    
     plt.show()
-
-def toDot(file_name, out_name):
-    print('Exporting ' + file_name + ' in dot ' + out_name + '.dot')
-    library = build_funcLib()
-    c = CGP.load_from_file(file_name, library)
-    c.to_dot(out_name+'.dot', ['x'], ['y'])
-    print('Converting dot file into pdf in ' + out_name + '.pdf')
-    os.system('dot -Tpdf ' + out_name + '.dot' + ' -o ' + out_name + '.pdf')
-
-def displayFunctions(file_name):
-    library = build_funcLib()
-    c = CGP.load_from_file(file_name, library)
-    c.to_function_string(['x'], ['y'])
-
-
 
 def sr_benchmark():
     pass
@@ -207,7 +198,8 @@ def winequality():
             CGP.CGPFunc(f_sqrt, 'sqrt', 1, 0, 'sqrt'),
             CGP.CGPFunc(f_div, 'div', 2, 1, '/'),
             CGP.CGPFunc(f_floor, 'floor', 2, 0, '_'),
-            CGP.CGPFunc(f_ceil, 'ceil', 2, 0, '~')
+            CGP.CGPFunc(f_ceil, 'ceil', 2, 0, '~'),
+            CGP.CGPFunc(f_const, 'c', 0, 1, 'c')
 
             ]
     wine_evaluator = SREvaluator(x_train, y_train, n_inputs=x_train.shape[-1], n_outputs=1, col=min(x_train.shape)*10, library=wine_lib, loss='mse')
@@ -247,16 +239,20 @@ def strogatz_glider1():
     '''
         x' = -0.05 * x**2 - sin(y)
     '''
-    
+    # constant known from equation (yes i am cheating)
     c = -0.05
-    
+    # EAs paramaters  
+    l = 16
+    m = 8
     # get data using pmlb
     pdata = pmlb.fetch_data("strogatz_glider1")
 
     pdata = pdata.sample(frac=1, random_state=42).reset_index(drop=True)
-    pdata['cst'] = c*np.ones(len(pdata))
+    
+    # add constant column
+    # pdata['cst'] = c*np.ones(len(pdata))
     y = pdata['target'].to_numpy()
-    x = pdata[["x", "y", 'cst']].to_numpy()
+    x = pdata[["x", "y", ]].to_numpy()
 
     split_ind = round(len(pdata) * 0.5 )
     xtrain = x[:split_ind] 
@@ -265,72 +261,66 @@ def strogatz_glider1():
     xtest = x[split_ind:]
     ytest = y[split_ind:]
 
-    lib = [CGP.CGPFunc(f_sum, 'sum', 2, 0, '+'),
-            CGP.CGPFunc(f_aminus, 'aminus', 2, 0, '-'),
-            CGP.CGPFunc(f_mult, 'mult', 2, 0, '*'),
-            # CGP.CGPFunc(f_exp, 'exp', 1, 0, 'exp'),
-            # CGP.CGPFunc(f_log, 'log', 1, 0, 'ln'),
-            # # CGP.CGPFunc(f_sqrt, 'sqrt', 1, 0, 'sqrt'),
-            # CGP.CGPFunc(f_div, 'div', 2, 0, '//'),
-            CGP.CGPFunc(f_sin, 'sin', 1, 0, 'sin'),
-            CGP.CGPFunc(f_cos, 'cos', 1, 0, '   cos'),
-            # CGP.CGPFunc(f_const, 'cst', 0, 1, 'c1'),  
-            # CGP.CGPFunc(f_ceil, 'ceil', 2, 0, '~')
-
+    lib = [CGPFunc(f_sum, 'sum', 2, 0, '+'),
+            CGPFunc(f_aminus, 'aminus', 2, 0, '-'),
+            CGPFunc(f_mult, 'mult', 2, 0, '*'),
+            # CGPFunc(f_exp, 'exp', 1, 0, 'exp'),
+            # CGPFunc(f_log, 'log', 1, 0, 'ln'),
+            # CGP.CGPFunc(f_sqrt, 'sqrt', 1, 0, 'sqrt'),
+            CGPFunc(f_div, 'div', 2, 0, '//'),
+            CGPFunc(f_sin, 'sin', 1, 0, 'sin'),
+            CGPFunc(f_cos, 'cos', 1, 0, '   cos'),
+            CGPFunc(f_const, 'c', 0, 1, 'c')
             ]
     
 
-    evaluator = SREvaluator(xtrain, ytrain, n_inputs=3, n_outputs=1, col=20, library=lib, loss='mse')
+    evaluator = SREvaluator(xtrain, ytrain, n_inputs=2, n_outputs=1, col=120, library=lib, loss='mae')
     
-    hof, hist = evaluator.evolve(mu=8, nb_ind=32, n_it=5000)
+    hof, hist = evaluator.evolve(mu=m, nb_ind=l, num_csts=1, mutation_rate_nodes=0.2, mutation_rate_outputs=0.2, n_it=5000)
 
 
+    input_names = ['x', 'y']
+    output_names = ['yp']   
+    G = hof.netx_graph(input_names, output_names, active=True, simple_label=False)
+
+
+    eq = ''
     try:
-        evaluator.best_logs(['x', 'y', 'c1'], ['yp'])
+        eq = evaluator.best_logs(input_names,output_names)
     except Exception as e:
         print(e)
 
+    # fig = plt.figure()
+    # xtest = np.sort(xtest, axis=0)
+    y_sr = hof.run(xtest)[0].reshape(ytest.shape)
 
 
+    R2 = metrics.r2_score(ytest, y_sr)
+
+
+    # y_sr = hof.run(xtrain)[0].reshape(ytrain.shape)
+    
+    title = "R2 score : " + str(R2) + '\n equation : ' +  str(eq)
+    
+    net_hist_validation(G, hist, xtest[:, :2], ytest,  xtest[:, :2], y_sr, 2, 1, title=title)
+    
+    
     fig = plt.figure()
-
-    ax = fig.add_subplot(1,3,1, projection='3d')
-
-    ax.plot(xtest[:,0], xtest[:,1], ytest, '.', label='true data')
+    ax3 = fig.add_subplot(111, projection='3d')
+    ax3.scatter(xtest[:, 0], xtest[:, 1], ytest)
+    ax3.plot(xtest[:, 0], xtest[:, 1], y_sr, 'r.', linewidth=2)
+    ax3.set_ylabel('y')
+    ax3.set_xlabel('x')
+    ax3.set_zlabel('z')
     
-    y_sr = hof.run(xtest)
-
-    ax.plot(xtest[:,0], xtest[:,1], y_sr, 'r.', label='cgp regression')
-    print("validation R2 : ", metrics.r2_score(ytest, y_sr.reshape(ytest.shape)))
-
-    ax.set_xlabel("x")
-    ax.set_ylabel("y")
-    ax.set_zlabel("z")
-
-    ax = fig.add_subplot(1, 3, 2)
-    ax.plot(hist)
-    
-
-
-
-
-
     plt.show()
 
-
-if __name__ == '__main__':
-    # print (sys.argv)
-    # if len(sys.argv) == 1:
-    #     print('Starting for roses')
-    #     # base('test')
-    #     roses('test')
-    # if len(sys.argv)==2:
-    #     print('Starting evolution from random genome')
-    #     evolve(sys.argv[1])
-    # elif len(sys.argv)==3:
-    #     print('Starting evolution from genome saved in ', sys.argv[2])
-        # evo(sys.argv[1], genome=sys.argv[2])
-    # winequality()
-    base('test')
+def regression_benchmark():
+    base('basic')   
     # strogatz_glider1()
     plt.show()
+
+if __name__ == '__main__':
+    # roses('roses')
+    regression_benchmark()
+    

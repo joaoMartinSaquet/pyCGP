@@ -1,4 +1,6 @@
 import networkx as nx
+import matplotlib.pyplot as plt
+import matplotlib.gridspec as gridspec
 
 def draw_net(ax, G,  n_input, n_output, node_size=2000, y_offset=0, node_color = 'lightblue', edge_color = 'black', node_shape='o', alpha=0.5, delta = 2):
     # TODO add diff color for input, + handle n_output
@@ -35,3 +37,43 @@ def draw_net(ax, G,  n_input, n_output, node_size=2000, y_offset=0, node_color =
 
 
     nx.draw_networkx_labels(G, pos, font_size=16, font_color='black')
+
+
+def net_hist_validation(net, hist, val_x, val_y, x_cgp, y_cgp, n_input, n_output, title=None):
+
+    fig = plt.figure(figsize=(8, 6))
+    
+    gs = gridspec.GridSpec(2, 2, height_ratios=[3, 1])
+
+    # net sub
+    ax1 = fig.add_subplot(gs[0, :])
+    draw_net(ax1, net, n_input, n_output, node_shape='o')
+
+    # hist sub
+    ax2 = fig.add_subplot(gs[1, 0])
+    ax2.plot(hist)
+    ax2.set_xlabel('epochs')
+    ax2.set_ylabel('fitness')
+    ax2.grid(True)
+
+    n_x = len(val_x.shape)
+
+    # val sub
+    if n_x == 1:
+        ax3 = fig.add_subplot(gs[1, 1])
+        ax3.scatter(val_x, val_y)
+        ax3.plot(x_cgp, y_cgp, 'r', linewidth=2)
+        ax3.set_ylabel('y')
+        ax3.set_xlabel('x')
+        ax3.grid(True)
+    elif n_x == 2:
+        ax3 = fig.add_subplot(gs[1, 1], projection='3d')
+        ax3.scatter(val_x[:, 0], val_x[:, 1], val_y)
+        ax3.plot(x_cgp[:, 0], x_cgp[:, 1], y_cgp, 'r.', linewidth=2)
+        ax3.set_ylabel('y')
+
+    if title:
+        fig.suptitle(title)
+
+    plt.tight_layout()
+    

@@ -1,8 +1,64 @@
 import os
 import numpy as np
 from .cgp import CGP
+import cma
+
+
 # from .evaluators.evaluator import Evaluator
 from joblib import Parallel, delayed
+
+
+CMA_OPTIONS = {
+    'popsize': 20,  # Population size
+    'tolfun': 1e-5,  # Stop if the function value difference is less than this
+    'maxiter': 500,  # Maximum number of iterations
+	'verb_log' : 0,
+	'verb_disp' : 0
+}
+
+def selection_wheel(pop, pop_fit, n):
+
+
+    # 1/x => -1000  is then close to 0
+    prob_fit = 1/(abs(pop_fit) + 0.1) 
+    prob_fit = np.cumsum(prob_fit/np.sum(prob_fit))
+
+    new_pop = []
+    new_fit = []
+    for i in range(n):
+        p = np.random.random()
+        ind = len(np.where(prob_fit<p)[0])
+        new_pop.append(pop[ind])
+        new_fit.append(pop_fit[ind])
+
+    return new_pop, new_fit
+
+def selection_elitism(pop, pop_fit, n):
+
+
+    ind_hof = np.argsort(pop_fit)[::-1]
+
+    return pop[ind_hof[:n]], pop_fit[ind_hof[:n]]
+	
+
+def selection_tournament(pop, pop_fit, n, tournament_size = 2	):
+
+
+	new_pop = []
+	new_fit = []
+		
+	for i in range(n):
+		tournament_ids = np.random.randint(0, len(pop), tournament_size)
+
+		tournament_fit = pop_fit[tournament_ids]
+
+		winner_id = tournament_ids[np.argmax(tournament_fit)]
+
+		new_pop.append(pop[winner_id])
+		new_fit.append(pop_fit[winner_id])
+
+	return new_pop, new_fit
+
 
 class CGPES_1l:
 	# TODO add validation parameter
@@ -79,10 +135,12 @@ class CGPES_1l:
 
 class CGPES_ml:
 	# TODO add validation parameter
-	def __init__(self, num_father, num_offsprings, mutation_rate_nodes, mutation_rate_outputs, father, evaluator, folder='genomes', num_cpus = 1):
+	def __init__(self, num_father, num_offsprings, mutation_rate_nodes, mutation_rate_outputs, 
+			  mutation_rate_const_params, father, evaluator, folder='genomes', num_cpus = 1):
 		self.lbda = num_offsprings
 		self.mutation_rate_nodes = mutation_rate_nodes
 		self.mutation_rate_outputs = mutation_rate_outputs
+		self.mutation_rate_const_params = mutation_rate_const_params
 
 		self.mu = num_father
 		self.hof = father
@@ -98,17 +156,18 @@ class CGPES_ml:
 		self.fitness_history = []
 
 	def initialize(self):
+		self.it = 0
 		if not os.path.isdir(self.folder):
 			os.mkdir(self.folder)
 		self.logfile = open(self.folder + '/out.txt', 'w')
 		self.hof_fit = []
 		for hof in self.hof:
 			self.hof_fit.append(self.evaluator.evaluate(hof, 0))
-		self.hof[np.argmax(self.hof_fit)].save(self.folder + '/cgp_genome_0_' + str(self.hof_fit) + '.txt')
+		self.hof[np.argmax(self.hof_fit)].save(self.folder + '/cgp_genome_0_' + str(self.it) + '.txt')
 		self.offsprings = np.empty(self.lbda, dtype=type(self.hof[0]))
 		self.offspring_fitnesses = np.zeros(self.lbda, dtype=float)
 		self.initialized = True
-		self.it = 0
+
 
 	def run(self, num_iteration, term_criteria):
 		if not self.initialized:
@@ -125,9 +184,28 @@ class CGPES_ml:
 					j = np.random.randint(0, self.mu)
 					self.offsprings[i] = self.hof[j].clone()
 					#self.offsprings[i].mutate(self.num_mutations)
-					self.offsprings[i].mutate_per_gene(self.mutation_rate_nodes, self.mutation_rate_outputs)
+					self.offsprings[i].mutate_per_gene(self.mutation_rate_nodes, self.mutation_rate_outputs, self.mutation_rate_const_params)
+					# self.offsprings[i].goldman_mutate()
 #					self.offsprings[i].goldman_mutate_2()
-					self.offspring_fitnesses[i] = self.evaluator.evaluate(self.offsprings[i], self.it)
+
+
+					if self.offsprings[i].cst_to_optimize:
+						self.offsprings[i].cst_to_optimize = False
+						# cmaes optimization
+
+						#CMA(mean, sigma, [self.offsprings[i].const_min, self.offsprings[i].const_max])
+						opt = cma.CMAEvolutionStrategy(self.offsprings[i].cst_table, 1.0, CMA_OPTIONS)						# self.offspring_fitnesses[i] = self.evaluator.evaluate(self.offsprings[i], self.it)
+						def obj(x):
+							self.offsprings[i].cst_table = x
+							# self.offsprings[i].cst_to_optimize = True
+							return 	-self.evaluator.evaluate(self.offsprings[i], self.it)	# evaluate is higher is better and cma try to get min 
+						
+						opt.optimize(obj)
+						self.offsprings[i].cst_to_optimize = False
+						self.offsprings[i].cst_table = opt.best.x
+						self.offspring_fitnesses[i] = -opt.best.f
+					else:
+						self.offspring_fitnesses[i] = self.evaluator.evaluate(self.offsprings[i], self.it)
 			else:
 				# deprecated for the moment
 				for i in range(self.lbda):
@@ -147,10 +225,14 @@ class CGPES_ml:
 			pop_fit = np.hstack((self.hof_fit, self.offspring_fitnesses))
 
 			# selction piped wheel for now 
-			# self.hof, self.hof_fit = self.selection_wheel(pop, pop_fit, self.mu)
+			# self.hof, self.hof_fit = selection_wheel(pop, pop_fit, self.mu)
 
 			# eltism selection
-			self.hof, self.hof_fit = self.selection_elitism(pop, pop_fit, self.mu)
+			self.hof, self.hof_fit = selection_elitism(pop, pop_fit, self.mu)
+
+			# tournament selection
+			# self.hof, self.hof_fit = selection_tournament(pop, pop_fit, self.mu, tournament_size = int((self.mu + self.lbda)/4)) 
+
 
 			# display stats
 			print(self.it, '\t mean hof fit ', np.mean(self.hof_fit), '\t var hof fit ', str(np.var(self.hof_fit)), '\t', self.offspring_fitnesses)
@@ -158,7 +240,7 @@ class CGPES_ml:
 			self.logfile.flush()
 			self.fitness_history.append(np.mean(self.hof_fit))
 
-			if np.abs(np.mean(self.hof_fit)) <= term_criteria:
+			if np.min(np.abs(self.hof_fit)) <= term_criteria:
 				break
 			# find how to save now 
 			# print('====================================================')
@@ -167,26 +249,6 @@ class CGPES_ml:
 			# 	self.hof.save(self.folder + '/cgp_genome_' + str(self.it) + '_' + str(self.hof_fit) + '.txt')
 
 
-	def selection_wheel(self, pop, pop_fit, n):
 
+# selection algorithms
 
-		# 1/x => -1000  is then close to 0
-		prob_fit = 1/(abs(pop_fit) + 0.1) 
-		prob_fit = np.cumsum(prob_fit/np.sum(prob_fit))
-
-		new_pop = []
-		new_fit = []
-		for i in range(n):
-			p = np.random.uniform(0, 1.0)
-			ind = len(np.where(prob_fit<p)[0])
-			new_pop.append(pop[ind])
-			new_fit.append(pop_fit[ind])
-
-		return new_pop, new_fit
-
-	def selection_elitism(self, pop, pop_fit, n):
-
-
-		ind_hof = np.argsort(pop_fit)[::-1]
-
-		return pop[ind_hof[:n]], pop_fit[ind_hof[:n]]
