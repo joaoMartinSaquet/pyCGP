@@ -16,18 +16,12 @@ import seaborn as sn
 from sklearn.preprocessing import StandardScaler
 import sklearn.metrics as metrics
 import pmlb
+import warnings
+
+# Suppress all warnings
+warnings.filterwarnings("ignore")
 
 
-def build_funcLib():
-    return [CGP.CGPFunc(f_sum, 'sum', 2, 0, '+'),
-            CGP.CGPFunc(f_aminus, 'aminus', 2, 0, '-'),
-            # CGP.CGPFunc(f_mult, 'mult', 2, 0, '*'),
-            # CGP.CGPFunc(f_sin, 'sin', 1, 0, 'sin'),
-            # CGP.CGPFunc(f_cos, 'cos', 1, 0, 'cos'),
-            # CGP.CGPFunc(f_exp, 'exp', 1, 0, 'exp'),
-            CGP.CGPFunc(f_mod, 'mod', 2, 0, '%'),
-            CGP.CGPFunc(f_div, 'div', 2, 0, '/')
-            ]
 def fit_me(x):
     # return np.sin(x*x) + np.cos(0.5*x)
     # return 10+x 
@@ -44,7 +38,7 @@ def base(folder_name):
     # library = build_funcL
 
     e = SREvaluator(x_train=x_train, y_train=y_train, n_inputs=1, n_outputs=1, col=30, loss='mse')
-    best, hist = e.evolve(num_csts=1, mu=4, nb_ind=16, n_it = 100, folder_name=folder_name)
+    best, hist = e.evolve(num_csts=1, mu=4, nb_ind=8, mutation_rate_const_params=0.2, n_it = 500, folder_name=folder_name)
     input_name = ['x']
     output_name = ['y']
 
@@ -154,8 +148,6 @@ def roses(folder_name, col=70, row=1, nb_ind=8, mutation_rate_nodes=0.1, mutatio
     # ax.plot_surface(y_train[0,:].reshape(n,n), y_train[1,:].reshape(n,n), y_train[2,:].reshape(n,n))    
     plt.show()
 
-def sr_benchmark():
-    pass
 
 def winequality():
     dataset_path = f'datasets/winequality/winequality-red.csv'
@@ -239,8 +231,6 @@ def strogatz_glider1():
     '''
         x' = -0.05 * x**2 - sin(y)
     '''
-    # constant known from equation (yes i am cheating)
-    c = -0.05
     # EAs paramaters  
     l = 16
     m = 8
@@ -270,13 +260,14 @@ def strogatz_glider1():
             CGPFunc(f_div, 'div', 2, 0, '//'),
             CGPFunc(f_sin, 'sin', 1, 0, 'sin'),
             CGPFunc(f_cos, 'cos', 1, 0, '   cos'),
-            CGPFunc(f_const, 'c', 0, 1, 'c')
+            CGPFunc(f_const, 'c', 0, 1, 'c'),
+            # CGPFunc(f_squared, 'square', 1 , '^2')
             ]
     
 
-    evaluator = SREvaluator(xtrain, ytrain, n_inputs=2, n_outputs=1, col=120, library=lib, loss='mae')
+    evaluator = SREvaluator(xtrain, ytrain, n_inputs=2, n_outputs=1, col=30, library=lib, loss='mae')
     
-    hof, hist = evaluator.evolve(mu=m, nb_ind=l, num_csts=1, mutation_rate_nodes=0.2, mutation_rate_outputs=0.2, n_it=5000)
+    hof, hist = evaluator.evolve(mu=m, nb_ind=l, num_csts=1, mutation_rate_nodes=0.4, mutation_rate_outputs=0.1, n_it=5000)
 
 
     input_names = ['x', 'y']
@@ -304,20 +295,9 @@ def strogatz_glider1():
     
     net_hist_validation(G, hist, xtest[:, :2], ytest,  xtest[:, :2], y_sr, 2, 1, title=title)
     
-    
-    fig = plt.figure()
-    ax3 = fig.add_subplot(111, projection='3d')
-    ax3.scatter(xtest[:, 0], xtest[:, 1], ytest)
-    ax3.plot(xtest[:, 0], xtest[:, 1], y_sr, 'r.', linewidth=2)
-    ax3.set_ylabel('y')
-    ax3.set_xlabel('x')
-    ax3.set_zlabel('z')
-    
-    plt.show()
-
 def regression_benchmark():
     base('basic')   
-    # strogatz_glider1()
+    strogatz_glider1()
     plt.show()
 
 if __name__ == '__main__':

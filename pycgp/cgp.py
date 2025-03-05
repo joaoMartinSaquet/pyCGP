@@ -1105,7 +1105,7 @@ class CGP_with_cste:
 		out.close()
 
 
-	def netx_graph(self, inputs_names=None, output_names=None, active = True, simple_label=True):
+	def netx_graph(self, inputs_names=None, output_names=None, active = True, simple_label=True, verbose=False):
 		
 		print("created graph ? ", self.graph_created)
 		G = nx.MultiDiGraph()
@@ -1122,10 +1122,10 @@ class CGP_with_cste:
 			print("active nodes id : ", self.nodes_used)
 			nodes_id = self.nodes_used[::-1]
 			nodes = self.nodes[self.nodes_used][::-1]
-
-			for n in nodes :
-				print("node function ", self.library[n.function].name, end = ' ')
-				print("nodes args ", n.args)
+			if verbose :
+				for n in nodes :
+					print("node function ", self.library[n.function].name, end = ' ')
+					print("nodes args ", n.args)
 		else:
 			nodes = self.nodes
 			nodes_id = [i for i in range(0, len(self.nodes))]
@@ -1150,8 +1150,8 @@ class CGP_with_cste:
 					# print("edge : {} -> {}".format(a, i))
 					G.add_edge(a, i, key=con_index)
 					con_index += 1
-			for c in n.const_params:
-				G.add_edge(c, i)
+			# for c in n.const_params:
+			# 	G.add_edge(c, i)
 
 			
 			match_nodes[i] = label

@@ -50,7 +50,7 @@ class SREvaluator(Evaluator):
     def clone(self):
         return SREvaluator(self.x_train, self.y_train)
     
-    def evolve(self, mu, nb_ind = 4, num_csts = 0, mutation_rate_nodes = 0.2, mutation_rate_outputs=0.2, mutation_rate_const_params=0.2, n_cpus=1, n_it=500, folder_name='test', term_criteria=1e-5):
+    def evolve(self, mu, nb_ind = 4, num_csts = 0, mutation_rate_nodes = 0.2, mutation_rate_outputs=0.2, mutation_rate_const_params=0.05, n_cpus=1, n_it=500, folder_name='test', term_criteria=1e-5):
 
         if mu > 1: 
             self.hof = [CGP_with_cste.random(self.n_inputs, self.n_outputs, num_csts, self.col, self.row, self.library, 
