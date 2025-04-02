@@ -9,9 +9,9 @@ from joblib import Parallel, delayed
 
 
 CMA_OPTIONS = {
-    'popsize': 40,  # Population size
+    'popsize': 50,  # Population size
     'tolfun': 1e-3,  # Stop if the function value difference is less than this
-    'maxiter': 500,  # Maximum number of iterations
+    'maxiter': 100,  # Maximum number of iterations
 	'verb_log' : 0,
 	'verb_disp' : 0
 }
@@ -41,7 +41,7 @@ def selection_elitism(pop, pop_fit, n):
     return pop[ind_hof[:n]], pop_fit[ind_hof[:n]]
 	
 
-def selection_tournament(pop, pop_fit, n, tournament_size = 2	):
+def selection_tournament(pop, pop_fit, n, tournament_size = 2):
 
 
 	new_pop = []
@@ -228,20 +228,20 @@ class CGPES_ml:
 			# self.hof, self.hof_fit = selection_wheel(pop, pop_fit, self.mu)
 
 			# eltism selection
-			self.hof, self.hof_fit = selection_elitism(pop, pop_fit, self.mu)
+			# self.hof, self.hof_fit = selection_elitism(pop, pop_fit, self.mu)
 
 			# tournament selection
-			# self.hof, self.hof_fit = selection_tournament(pop, pop_fit, self.mu, tournament_size = int((self.mu + self.lbda)/4)) 
+			self.hof, self.hof_fit = selection_tournament(pop, pop_fit, self.mu, tournament_size = int((self.mu + self.lbda)/4)) 
 
 
 			# display stats
-			if self.it % 10 == 0:
-				print(self.it, '\t mean hof fit ', np.mean(self.hof_fit), '\t var hof fit ', str(np.var(self.hof_fit)), '\t', self.offspring_fitnesses)
-				self.logfile.write(str(self.it) + '\t' + str(self.hof_fit) + '\t' + str(self.offspring_fitnesses) + '\n')
+			if self.it % 1000 == 0:
+				print(self.it, '\t mean hof fit ', np.mean(self.hof_fit), '\t best hof fit ', str(np.max(self.hof_fit)), '\t', self.offspring_fitnesses)
+				self.logfile.write(str(self.it) + '\t' + str(self.hof_fit) + '\t' + str(self.hof_fit) + '\n')
 				self.logfile.flush()
-			self.fitness_history.append(np.mean(self.hof_fit))
+			self.fitness_history.append(np.max(self.hof_fit))
 
-			if np.min(np.abs(self.hof_fit)) <= term_criteria:
+			if np.min(np.abs(np.max(self.hof_fit))) <= term_criteria:
 				break
 			# find how to save now 
 			# print('====================================================')

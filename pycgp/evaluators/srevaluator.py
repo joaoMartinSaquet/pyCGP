@@ -10,9 +10,9 @@ DEFAULT_SR_LIBRARY = [
             CGPFunc(f_sum, 'sum', 2, 0, '+'),
             CGPFunc(f_aminus, 'aminus', 2, 0, '-'),
             CGPFunc(f_mult, 'mult', 2, 0, '*'),
-            # CGPFunc(f_sin, 'sin', 1, 0, 'sin'),
+            CGPFunc(f_sin, 'sin', 1, 0, 'sin'),
             CGPFunc(f_cos, 'cos', 1, 0, 'cos'),
-            # CGPFunc(f_div, 'div', 2, 0, '/'),
+            CGPFunc(f_div, 'div', 2, 0, '/'),
             CGPFunc(f_const, 'c', 0, 1, 'c')
             ]
 
@@ -32,7 +32,8 @@ class SREvaluator(Evaluator):
             self.loss = lambda y_cgp, y_train: np.mean((y_cgp - y_train)**2)
         elif loss == 'mae':
             self.loss = lambda y_cgp, y_train: np.mean(np.abs(y_cgp - y_train))
-
+        elif loss == 'rmse':
+             self.loss = lambda y_cgp, y_train: np.sqrt(np.mean((y_cgp - y_train)**2))    
         self.input_shape = (max(x_train.shape), )
 
 
@@ -50,11 +51,11 @@ class SREvaluator(Evaluator):
     def clone(self):
         return SREvaluator(self.x_train, self.y_train)
     
-    def evolve(self, mu, nb_ind = 4, num_csts = 0, mutation_rate_nodes = 0.2, mutation_rate_outputs=0.2, mutation_rate_const_params=0.05, n_cpus=1, n_it=500, folder_name='test', term_criteria=1e-5):
+    def evolve(self, mu, nb_ind = 4, num_csts = 0, mutation_rate_nodes = 0.2, mutation_rate_outputs=0.2, mutation_rate_const_params=0.01, n_cpus=1, n_it=500, folder_name='test', term_criteria=1e-4):
 
         if mu > 1: 
             self.hof = [CGP_with_cste.random(self.n_inputs, self.n_outputs, num_csts, self.col, self.row, self.library, 
-                                   self.col, False, const_min=-0.1, const_max=0.1, input_shape=self.input_shape, dtype='float')
+                                   self.col, False, const_min=-10, const_max=10, input_shape=self.input_shape, dtype='float')
                                     for i in range(mu)]
             es = CGPES_ml(mu, nb_ind, mutation_rate_nodes, mutation_rate_outputs, mutation_rate_const_params, self.hof, self, folder_name, n_cpus)
             es.run(n_it, term_criteria=term_criteria)

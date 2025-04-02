@@ -645,6 +645,8 @@ class CGP_with_cste:
 			self.max_const_params = np.maximum(self.max_const_params, f.const_params)
 		if cst_table is None:
 			self.cst_table = np.random.random(num_cste) * (self.const_max - self.const_min) + self.const_min
+			self.cst_table = np.zeros(num_cste)
+			
 		else:
 			self.cst_table = cst_table
 
