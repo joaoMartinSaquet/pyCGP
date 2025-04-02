@@ -235,7 +235,7 @@ class CGPES_ml:
 
 
 			# display stats
-			if self.it % 1000 == 0:
+			if self.it % 10 == 0:
 				print(self.it, '\t mean hof fit ', np.mean(self.hof_fit), '\t best hof fit ', str(np.max(self.hof_fit)), '\t', self.offspring_fitnesses)
 				self.logfile.write(str(self.it) + '\t' + str(self.hof_fit) + '\t' + str(self.hof_fit) + '\n')
 				self.logfile.flush()

@@ -13,7 +13,7 @@ DEFAULT_SR_LIBRARY = [
             CGPFunc(f_sin, 'sin', 1, 0, 'sin'),
             CGPFunc(f_cos, 'cos', 1, 0, 'cos'),
             CGPFunc(f_div, 'div', 2, 0, '/'),
-            CGPFunc(f_const, 'c', 0, 1, 'c')
+            # CGPFunc(f_const, 'c', 0, 1, 'c')
             ]
 
 

@@ -2,19 +2,26 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
-def draw_net(ax, G,  n_input, n_output, node_size=2000, y_offset=0, node_color = '#99ff99', edge_color = 'black', node_shape='o', alpha=0.5, delta = 2):
+def draw_net(ax, G,  n_input, n_output, node_size=2000, y_offset=0, node_color = '#99ff99', edge_color = 'black', node_shape='o', alpha=0.5, delta = 20):
     # TODO add diff color for input, + handle n_output
     pos = nx.spring_layout(G)
 
     pos = {}
     n_color = []
+    k = 0
+    # output_idx = 0
     for i, node in enumerate(G.nodes()):
         if i < n_input:
-            pos[node] =  (0, y_offset - (n_input/2 - i)*delta)
+            if n_input % 2 == 0:
+                t = n_input / 2
+            else: 
+                t = 0
+            pos[node] =  (0, y_offset + (n_input/2 - (i if i < t else (i + 1)))*delta)
             n_color.append('#99ccff')
-        elif i > (len(G) -1) - n_output :      
-            pos[node] = (i, y_offset )
+        elif i > (len(G) -1) - n_output :              
+            pos[node] = (len(G) - n_output, y_offset + (k - 1/n_output)*delta )
             n_color.append('#ff9999')
+            k += 1
         else:
             pos[node] = (i, y_offset )
             n_color.append(node_color)
