@@ -33,7 +33,9 @@ class SREvaluator(Evaluator):
         elif loss == 'mae':
             self.loss = lambda y_cgp, y_train: np.mean(np.abs(y_cgp - y_train))
         elif loss == 'rmse':
-             self.loss = lambda y_cgp, y_train: np.sqrt(np.mean((y_cgp - y_train)**2))    
+            self.loss = lambda y_cgp, y_train: np.sqrt(np.mean((y_cgp - y_train)**2))    
+        elif loss == 'norm':
+            self.loss = lambda y_cgp, y_train: np.linalg.norm(y_cgp - y_train)/y_cgp.shape[0]
         self.input_shape = (max(x_train.shape), )
 
 
@@ -43,7 +45,7 @@ class SREvaluator(Evaluator):
         loss = self.loss(y_cgp, self.y_train)
 
         if not np.isfinite(loss):
-            loss = 1000
+            loss = 1000000
 
         # -loss because we want to minimize the error
         return -loss
@@ -70,7 +72,8 @@ class SREvaluator(Evaluator):
             best = es.father
         
         self.best = best
-            
+        
+        print("best fitness : ", fit_history[-1])
         return best, fit_history
         
     def best_logs(self, input_names, output_names):

@@ -231,11 +231,11 @@ class CGPES_ml:
 			# self.hof, self.hof_fit = selection_elitism(pop, pop_fit, self.mu)
 
 			# tournament selection
-			self.hof, self.hof_fit = selection_tournament(pop, pop_fit, self.mu, tournament_size = int((self.mu + self.lbda)/4)) 
+			self.hof, self.hof_fit = selection_tournament(pop, pop_fit, self.mu, tournament_size = 3)
 
 
 			# display stats
-			if self.it % 10 == 0:
+			if self.it % 10 == 0 or self.it == (num_iteration-1):
 				print(self.it, '\t mean hof fit ', np.mean(self.hof_fit), '\t best hof fit ', str(np.max(self.hof_fit)), '\t', self.offspring_fitnesses)
 				self.logfile.write(str(self.it) + '\t' + str(self.hof_fit) + '\t' + str(self.hof_fit) + '\n')
 				self.logfile.flush()

@@ -912,6 +912,7 @@ class CGP_with_cste:
 		if rnd.random() < mutation_rate_const_params:
 			# self.cst_table = np.random.random(self.num_cste) * (self.const_max - self.const_min) + self.const_min
 			self.cst_to_optimize = True & self.const_used
+	
 	def goldman_mutate(self):
 		"""
 			Not used
