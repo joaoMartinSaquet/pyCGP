@@ -11,7 +11,7 @@ from joblib import Parallel, delayed
 CMA_OPTIONS = {
     'popsize': 50,  # Population size
     'tolfun': 1e-3,  # Stop if the function value difference is less than this
-    'maxiter': 100,  # Maximum number of iterations
+    'maxiter': 10,  # Maximum number of iterations
 	'verb_log' : 0,
 	'verb_disp' : 0
 }
@@ -236,7 +236,7 @@ class CGPES_ml:
 
 			# display stats
 			if self.it % 10 == 0 or self.it == (num_iteration-1):
-				print(self.it, '\t mean hof fit ', np.mean(self.hof_fit), '\t best hof fit ', str(np.max(self.hof_fit)), '\t', self.offspring_fitnesses)
+				print(self.it, '\t mean hof fit ', np.mean(self.hof_fit), '\t best hof fit ', str(np.max(self.hof_fit)))
 				self.logfile.write(str(self.it) + '\t' + str(self.hof_fit) + '\t' + str(self.hof_fit) + '\n')
 				self.logfile.flush()
 			self.fitness_history.append(np.max(self.hof_fit))

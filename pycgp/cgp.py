@@ -704,6 +704,7 @@ class CGP_with_cste:
 
 			# if output genes is not inputs
 			if self.output_genes[p] - self.num_inputs >= 0:
+			# if self.output_genes[p] >= 0
 				id_to_evaluate.append(self.output_genes[p] - self.num_inputs)
 				self.to_evaluate[id_to_evaluate[-1]] = True
 			p = p + 1
@@ -1124,40 +1125,46 @@ class CGP_with_cste:
 		if active:
 			print("active nodes id : ", self.nodes_used)
 			nodes_id = self.nodes_used[::-1]
-			nodes = self.nodes[self.nodes_used][::-1]
-			if verbose :
-				for n in nodes :
-					print("node function ", self.library[n.function].name, end = ' ')
-					print("nodes args ", n.args)
+			# if there is any active nodes
+			if len(self.nodes_used) > 0:
+				nodes = self.nodes[self.nodes_used][::-1]
+				if verbose :
+					for n in nodes :
+						print("node function ", self.library[n.function].name, end = ' ')
+						print("nodes args ", n.args)
+				no_nodes_to_draw = False
+			else:
+				no_nodes_to_draw = True
 		else:
 			nodes = self.nodes
 			nodes_id = [i for i in range(0, len(self.nodes))]
 
 		# print("nodes : ", nodes_id)
-		for ind, n in enumerate(nodes):
-			i = nodes_id[ind] + self.num_inputs
-			# print("node id ", i)
-			if simple_label:	
-				label = self.library[n.function].name
-			else:
-				label = f"{i}_" + self.library[n.function].name
-			G.add_node(i, labels=label)
-			con_index = 0
-			for a in n.args:
+		if not no_nodes_to_draw:
+			for ind, n in enumerate(nodes):
+				i = nodes_id[ind] + self.num_inputs
+				# print("node id ", i)
+				if simple_label:	
+					label = self.library[n.function].name
+				else:
+					label = f"{i}_" + self.library[n.function].name
+				G.add_node(i, labels=label)
+				con_index = 0
+				for a in n.args:
+					
+					arity = self.library[n.function].arity 
+					# print("function : ", self.library[n.function].name, "args ? ", n.args)
+
+					if arity > con_index:	
+						# print(f"connection index : {con_index}, arity {arity}", end=' ')
+						# print("edge : {} -> {}".format(a, i))
+						G.add_edge(a, i, key=con_index)
+						con_index += 1
+				# for c in n.const_params:
+				# 	G.add_edge(c, i)
+
 				
-				arity = self.library[n.function].arity 
-				# print("function : ", self.library[n.function].name, "args ? ", n.args)
-
-				if arity > con_index:	
-					# print(f"connection index : {con_index}, arity {arity}", end=' ')
-					# print("edge : {} -> {}".format(a, i))
-					G.add_edge(a, i, key=con_index)
-					con_index += 1
-			# for c in n.const_params:
-			# 	G.add_edge(c, i)
-
-			
-			match_nodes[i] = label
+				match_nodes[i] = label
 		
 		# decodes output genes
 		outputs_ids = []

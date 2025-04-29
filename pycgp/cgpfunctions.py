@@ -42,7 +42,7 @@ def f_inv(args, const_params):
 	np.divide(args[0],abs(args[0]),out=np.zeros_like(args[0]),where=args[0]!=0)
 	
 def f_gt(args, const_params):
-	return  (args[0] < args[1]).astype(np.float128)
+	return  (args[0] > args[1]).astype(np.float128) * args[0] # return args[0] if he is greater than args[1] else 0
 
 def f_acos(args, const_params):
 	return np.acos(args[0]) / np.pi
@@ -79,7 +79,7 @@ def f_mod(args, const_params):
 	return np.mod(args[0], args[1])
 
 def f_div(args, cons_params):
-	if args[1].any() == 0:
+	if np.any(args[1] == 0):
 		return args[0]
 	else:
 		return np.divide(args[0], args[1])
@@ -92,3 +92,6 @@ def f_tanh(args, const_params):
 
 def f_lt(args, const_params):
 	return  (args[0] < args[1]).astype(np.float128)
+
+def f_atan2(args, const_params):
+	return np.arctan2(args[0], args[1])

@@ -19,7 +19,7 @@ def draw_net(ax, G,  n_input, n_output, node_size=2000, y_offset=0, node_color =
             pos[node] =  (0, y_offset + (n_input/2 - (i if i < t else (i + 1)))*delta)
             n_color.append('#99ccff')
         elif i > (len(G) -1) - n_output :              
-            pos[node] = (len(G) - n_output, y_offset + (k - 1/n_output)*delta )
+            pos[node] = ((len(G) - n_output)*delta, y_offset + (k - 1/n_output)*delta )
             n_color.append('#ff9999')
             k += 1
         else:
