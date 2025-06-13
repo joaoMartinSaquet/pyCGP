@@ -198,7 +198,7 @@ class CGP:
 			the input is a list of arrays, in which case the output will be a single array.
 		"""
 
-
+		
 		if isinstance(input_data, np.ndarray) and max(self.input_shape) != max(input_data.shape):
 			self.input_shape = (max(input_data.shape), )
 			self.node_output = np.zeros(((self.max_graph_length + self.num_inputs),) + self.input_shape, dtype=self.dtype)
@@ -661,6 +661,7 @@ class CGP_with_cste:
 			self.node_output = np.zeros(self.max_graph_length + self.num_inputs, dtype=self.dtype)
 		else:
 			self.node_output = np.zeros(((self.max_graph_length + self.num_inputs), ) + self.input_shape, dtype=self.dtype)
+			
 		self.nodes_used = []
 		self.output_genes = np.zeros(self.num_outputs, dtype=int)
 		self.nodes = np.empty(int(len(self.genome-self.num_outputs)/(1+self.max_arity+self.max_const_params)),
@@ -741,13 +742,14 @@ class CGP_with_cste:
 		Args:
 			input_data (array of float): data to be loaded when array size is (n_input, n_data)
 		"""
+		
 		if self.input_shape == 1:
 			for p in range(len(input_data)):
 				self.node_output[p] = input_data[p]
 		else: 
-			for p in range(min(input_data.shape)): # to do maybe just fill inputs nodes and not all the nodes 
+			
+			for p in range(self.num_inputs): # to do maybe just fill inputs nodes and not all the nodes 
 				self.node_output[p, :] = input_data[:, p]
-
 		if False : # !!!!!! self.recursive:
 			output_vals = self.read_output()
 			for q in range(len(output_vals)):
@@ -805,17 +807,29 @@ class CGP_with_cste:
 			the input is a list of arrays, in which case the output will be a single array.
 		"""
 
+		# ensure that input data is in the right shape
+		# input data is (n_data, n_input)
+		if len(input_data.shape) == 1:
+			input_data = input_data.reshape((1, self.num_inputs))
+		if len(input_data.shape) == 2:
+			if input_data.shape[1] != self.num_inputs:
+				input_data = input_data.T
+		elif len(input_data.shape) > 2:
+			raise ValueError("Input data must be a 1D or 2D array")
 
-		if isinstance(input_data, np.ndarray) and max(self.input_shape) != max(input_data.shape):
-			self.input_shape = (max(input_data.shape), )
-			self.node_output = np.zeros(((self.max_graph_length + self.num_inputs),) + self.input_shape, dtype=self.dtype)
+		
+		# if isinstance(input_data, np.ndarray) and max(self.input_shape) != max(input_data.shape):
+		# 	self.input_shape = (max(input_data.shape), )
+		# 	self.node_output = np.zeros(((self.max_graph_length + self.num_inputs),) + self.input_shape, dtype=self.dtype)
 
 		if (not self.graph_created):
 			self.create_graph()
 
+
 		self.load_input_data(input_data)
 		self.compute_graph()
-		return self.read_output().copy()
+		out = self.read_output().copy()
+		return out	
 
 	def read_output(self):
 		if self.input_shape == 1:
@@ -823,6 +837,7 @@ class CGP_with_cste:
 		else:
 			output = np.zeros((self.num_outputs,) + self.input_shape, dtype=self.dtype)
 		for p in range(0, self.num_outputs):
+			
 			output[p] = self.node_output[self.output_genes[p]].copy()
 
 		return output

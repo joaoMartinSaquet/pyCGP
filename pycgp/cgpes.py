@@ -242,6 +242,7 @@ class CGPES_ml:
 			self.fitness_history.append(np.max(self.hof_fit))
 
 			if np.min(np.abs(np.max(self.hof_fit))) <= term_criteria:
+				print("Training completed using because the term criteria is reached")
 				break
 			# find how to save now 
 			# print('====================================================')
